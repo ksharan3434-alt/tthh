@@ -546,6 +546,10 @@ import {
   doc, setDoc, getDoc, collection, getDocs, updateDoc, addDoc, deleteDoc,
   query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// NOTE: photo batches are written as their own small subcollection docs
+// (see PROCTOR_BATCH_SIZE below) instead of one doc per photo, so writes
+// drop ~10x. Each batch doc stays tiny (a handful of photo refs), so the
+// old 1MB-per-doc concern doesn't apply here either.
 
 /* Same Firebase project as the main Science World app, so an
    already-logged-in browser session is picked up automatically by
@@ -758,12 +762,60 @@ function analyzeProctorTick(){
   if(violationMsg) registerCameraViolation(violationMsg, violationIsCritical);
 
   proctorTickCount++;
-  if(violationMsg || proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
-    uploadProctorCanvas(canvas, capturedAt);
+  // Only a CRITICAL (fully black/covered) violation forces an immediate
+  // photo-batch flush - that's the one that actually counts towards
+  // auto-submit, so it deserves an instant record. Half-block/colour-cast
+  // warnings are informational-only and, per the comment above, are prone
+  // to false positives (lighting, camera angle) - if those forced a flush
+  // too, a student with a slightly awkward camera angle could repeatedly
+  // bypass the batching all exam long. They still get captured, just on
+  // the normal batch schedule like any other tick.
+  if(violationIsCritical || proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
+    uploadProctorCanvas(canvas, capturedAt, violationIsCritical);
   }
 }
 
-function uploadProctorCanvas(canvas, capturedAt){
+/* ---------------- proctor photo write-batching ----------------
+   Uploading to Cloudinary still happens per-photo (that part is free/cheap).
+   What we batch is the Firestore WRITE that records each photo's metadata:
+   instead of 1 addDoc() per photo (~1 write every ~3s -> thousands of
+   writes over a long test), we collect PROCTOR_BATCH_SIZE photo-refs in
+   memory and flush them as a SINGLE subcollection doc. A 180-min test at
+   the default 3s capture rate goes from ~3600 writes/student to ~360.
+   A violation photo always flushes immediately (with whatever's pending)
+   so suspicious moments are never delayed behind the batch. A periodic
+   safety timer also flushes a partial batch so nothing sits unsaved too
+   long if a student is mid-batch when they submit or lose connection. */
+const PROCTOR_BATCH_SIZE = 10;
+const PROCTOR_BATCH_SAFETY_FLUSH_MS = 20000; // force-flush a partial batch at least this often
+let photoBatch = [];
+let photoBatchSafetyTimer = null;
+
+function startPhotoBatchSafetyTimer(){
+  stopPhotoBatchSafetyTimer();
+  photoBatchSafetyTimer = setInterval(() => { flushPhotoBatch(); }, PROCTOR_BATCH_SAFETY_FLUSH_MS);
+}
+function stopPhotoBatchSafetyTimer(){
+  if(photoBatchSafetyTimer){ clearInterval(photoBatchSafetyTimer); photoBatchSafetyTimer = null; }
+}
+
+async function flushPhotoBatch(){
+  if(!photoBatch.length || !tt.attemptRef) return;
+  const toSend = photoBatch;
+  photoBatch = [];
+  try{
+    await addDoc(collection(db, "cbt_attempts", tt.attemptRef.id, "proctorPhotos"), {
+      photos: toSend, count: toSend.length,
+      batchCapturedAt: toSend[0].capturedAt
+    });
+  }catch(e){
+    // best-effort: a failed flush shouldn't interrupt the test, but we also
+    // don't want to silently lose the batch, so put it back for next try.
+    photoBatch = toSend.concat(photoBatch);
+  }
+}
+
+function uploadProctorCanvas(canvas, capturedAt, isViolationShot){
   const partNum = currentPartNumber();
   // Name + a short slice of the uid, so two students with the same name
   // (e.g. two "Rahul Kumar") never end up sharing one folder.
@@ -782,25 +834,23 @@ function uploadProctorCanvas(canvas, capturedAt){
       const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: fd });
       const data = await res.json();
       if(data.secure_url){
-        // Each photo is its own subcollection document rather than being
-        // appended to an array field on the attempt doc. An array field
-        // gets rewritten in full on every single write and eventually hits
-        // Firestore's 1MB document size limit (a 60-90 min test capturing
-        // every few seconds can easily reach thousands of entries) - a
-        // subcollection has no such ceiling and each write only sends the
-        // one new photo, not the whole growing history.
-        await addDoc(collection(db, "cbt_attempts", tt.attemptRef.id, "proctorPhotos"), {
+        photoBatch.push({
           url: data.secure_url, time: new Date(capturedAt).toISOString(), capturedAt,
           name: `${studentFolder}/${publicId}`
-        }).catch(()=>{});
+        });
+        // A violation photo is important enough to not sit around waiting
+        // for the batch to fill up, so flush right away in that case.
+        if(isViolationShot || photoBatch.length >= PROCTOR_BATCH_SIZE) flushPhotoBatch();
       }
     }catch(e){ /* a failed upload should never interrupt the test */ }
   }, 'image/jpeg', 0.7);
 }
 function startProctorCapture(){
   proctorTickCount = 0; halfBlockStreak = 0; colorCastStreak = 0;
+  photoBatch = [];
   analyzeProctorTick();
   proctorTimer = setInterval(analyzeProctorTick, PROCTOR_ANALYSIS_INTERVAL_MS);
+  startPhotoBatchSafetyTimer();
 }
 
 let currentUser = null;
@@ -1323,6 +1373,8 @@ async function submitTest(status, reason){
   releaseSingleTab();
   stopProctorCamera();
   releaseWakeLock();
+  stopPhotoBatchSafetyTimer();
+  await flushPhotoBatch(); // don't let a partial photo batch get lost on submit
   try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
 
   let correctCount=0, wrongCount=0, unattempted=0, score=0, totalMarks=0;
@@ -1413,7 +1465,12 @@ function blockKeys(e){
     (e.ctrlKey && ['u','s','p','a','f'].includes(k));
   if(blocked) e.preventDefault();
 }
-function onBeforeUnload(e){ if(!tt.submitted){ e.preventDefault(); e.returnValue=''; } }
+function onBeforeUnload(e){
+  if(!tt.submitted){
+    e.preventDefault(); e.returnValue='';
+    flushPhotoBatch(); // best-effort: browser may or may not let this finish
+  }
+}
 function trapBack(){
   history.pushState(null, '', location.href);
 }
@@ -2372,13 +2429,22 @@ window.openProctorPhotos = async (attemptDocId) => {
   body.innerHTML = `<p class="text-slate-400 text-xs col-span-full text-center py-8"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading photos...</p>`;
   document.getElementById('proctorPhotosModal').classList.remove('hidden');
   try{
-    // Photos live in a subcollection (see uploadProctorCanvas) so a long
-    // test with frequent captures never risks the attempt doc's 1MB size
-    // limit. Older attempts (captured before this change) may still only
-    // have the legacy `proctorPhotos` array field on the attempt doc
-    // itself, so that's kept as a fallback.
-    const subSnap = await getDocs(query(collection(db, "cbt_attempts", attemptDocId, "proctorPhotos"), orderBy("capturedAt")));
-    let photos = subSnap.docs.map(d => d.data());
+    // Photos live in a subcollection (see flushPhotoBatch) so a long test
+    // with frequent captures never risks the attempt doc's 1MB size limit.
+    // Each subcollection doc is now a BATCH of up to PROCTOR_BATCH_SIZE
+    // photos (doc.photos = [...]) instead of one doc per photo, so we
+    // flatten those out here. Docs written before batching was added are
+    // still single-photo docs (no `photos` array) - handled as a fallback
+    // so old attempts keep displaying correctly.
+    // No orderBy here on purpose: batch docs use `batchCapturedAt` while
+    // any older, pre-batching docs use `capturedAt` - mixing the two would
+    // make Firestore silently drop whichever docs lack that field. We sort
+    // client-side below instead, after flattening, so both kinds work.
+    const subSnap = await getDocs(collection(db, "cbt_attempts", attemptDocId, "proctorPhotos"));
+    let photos = subSnap.docs.flatMap(d => {
+      const data = d.data();
+      return Array.isArray(data.photos) ? data.photos : [data];
+    }).sort((a,b) => (a.capturedAt||0) - (b.capturedAt||0));
     if(!photos.length){
       const snap = await getDoc(doc(db, "cbt_attempts", attemptDocId));
       const a = snap.data();
