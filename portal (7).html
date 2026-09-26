@@ -802,21 +802,30 @@ function analyzeProctorTick(){
    long if a student is mid-batch when they submit or lose connection. */
 const PROCTOR_BATCH_SIZE = 10;
 // Must be LARGER than the time it normally takes to fill one batch
-// (PROCTOR_BATCH_SIZE * the ~3s gap between uploads = ~30s here), otherwise
-// this timer fires before the batch ever reaches PROCTOR_BATCH_SIZE and
-// ends up doing ALL the flushing itself - which is exactly what happened
-// at 20s (real test run showed ~1 write every ~20s instead of the
-// intended ~1 write every ~30s). 40s gives a comfortable buffer above the
-// ~30s fill time so the size-based flush is what normally fires, and this
-// timer only kicks in as a true safety net (e.g. slow uploads, a gap in
-// captures) rather than doing the routine flushing itself.
+// (PROCTOR_BATCH_SIZE * the ~3s gap between uploads = ~30s here) - this is
+// only a ceiling on how stale a batch is allowed to get, not a fixed
+// schedule of its own (see the "stale" check below for why that matters).
 const PROCTOR_BATCH_SAFETY_FLUSH_MS = 40000;
+const PROCTOR_BATCH_SAFETY_CHECK_MS = 10000; // how often we glance at the clock - cheap, does NOT itself write
 let photoBatch = [];
 let photoBatchSafetyTimer = null;
+let lastPhotoFlushAt = Date.now();
 
 function startPhotoBatchSafetyTimer(){
   stopPhotoBatchSafetyTimer();
-  photoBatchSafetyTimer = setInterval(() => { flushPhotoBatch(); }, PROCTOR_BATCH_SAFETY_FLUSH_MS);
+  lastPhotoFlushAt = Date.now();
+  // This used to fire flushPhotoBatch() on its own fixed 40s clock,
+  // completely unaware of the size-based flush - so it would often catch a
+  // batch just moments after a size-10 flush had already emptied it (e.g.
+  // size-flush at 30s, this firing at 40s finds only ~3 photos and flushes
+  // that too), producing lots of tiny 2-3-count docs instead of clean
+  // 10s. Now it only checks the clock every 10s and actually flushes when
+  // it's been PROCTOR_BATCH_SAFETY_FLUSH_MS since the LAST flush (size-
+  // triggered or otherwise) - so it stays silent whenever the size-based
+  // flush is doing its job, and only steps in as a genuine safety net.
+  photoBatchSafetyTimer = setInterval(() => {
+    if(Date.now() - lastPhotoFlushAt >= PROCTOR_BATCH_SAFETY_FLUSH_MS) flushPhotoBatch();
+  }, PROCTOR_BATCH_SAFETY_CHECK_MS);
 }
 function stopPhotoBatchSafetyTimer(){
   if(photoBatchSafetyTimer){ clearInterval(photoBatchSafetyTimer); photoBatchSafetyTimer = null; }
@@ -826,6 +835,7 @@ async function flushPhotoBatch(){
   if(!photoBatch.length || !tt.attemptRef) return;
   const toSend = photoBatch;
   photoBatch = [];
+  lastPhotoFlushAt = Date.now(); // marks "just flushed" so the safety-check above stays quiet for a while
   try{
     await addDoc(collection(db, "cbt_attempts", tt.attemptRef.id, "proctorPhotos"), {
       photos: toSend, count: toSend.length,
