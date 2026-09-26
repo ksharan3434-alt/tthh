@@ -299,6 +299,11 @@
     </div>
   </div>
 
+  <div id="imgZoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0); transition:background .25s ease" onclick="closeImgZoom()">
+    <img id="imgZoomTarget" src="" draggable="false" class="max-w-full max-h-full rounded-lg" style="object-fit:contain; transform:scale(.85); opacity:0; transition:transform .25s ease, opacity .25s ease">
+    <button onclick="closeImgZoom()" class="absolute top-4 right-4 text-white text-3xl leading-none w-10 h-10 flex items-center justify-center rounded-full bg-black/50">&times;</button>
+  </div>
+
   <div id="adminTestList" class="hidden max-w-5xl mx-auto p-4 sm:p-6 fade-in">
     <div class="flex items-center justify-between mb-5 gap-2">
       <h2 class="text-xl font-bold" style="color:var(--brand-maroon)">Manage Tests</h2>
@@ -1317,7 +1322,7 @@ function renderQuestion(){
   const q = tt.questions[tt.index];
   if(!q){ document.getElementById('ttQuestionArea').innerHTML = '<p class="text-center text-slate-400">No questions in this test.</p>'; return; }
   const selected = tt.answers[q.id];
-  const qImgHtml = q.imageUrl ? `<img draggable="false" src="${q.imageUrl}" class="max-w-full rounded-xl mb-4 border border-[#ecdcb9]">` : '';
+  const qImgHtml = q.imageUrl ? `<img draggable="false" src="${q.imageUrl}" onclick="zoomImage('${esc(q.imageUrl)}')" class="max-w-full rounded-xl mb-4 border border-[#ecdcb9] cursor-zoom-in">` : '';
   const optsHtml = q.options.map((opt,i) => {
     const optImg = (q.optionImages && q.optionImages[i]) ? `<img draggable="false" src="${q.optionImages[i]}" class="max-w-[160px] rounded-lg mt-2">` : '';
     return `
@@ -1342,6 +1347,28 @@ function recordElapsed(){
   tt.questionTimes[q.id] = (tt.questionTimes[q.id]||0) + elapsed;
   tt.qEnteredAt = now;
 }
+
+window.zoomImage = (url) => {
+  const modal = document.getElementById('imgZoomModal');
+  const img = document.getElementById('imgZoomTarget');
+  img.src = url;
+  modal.classList.remove('hidden');
+  // Force a reflow so the browser registers the "before" state (transparent
+  // background, shrunk+faded image) before we flip to the "after" state -
+  // without this the transition has nothing to animate from and just snaps.
+  void modal.offsetWidth;
+  modal.style.background = 'rgba(0,0,0,.9)';
+  img.style.transform = 'scale(1)';
+  img.style.opacity = '1';
+};
+window.closeImgZoom = () => {
+  const modal = document.getElementById('imgZoomModal');
+  const img = document.getElementById('imgZoomTarget');
+  modal.style.background = 'rgba(0,0,0,0)';
+  img.style.transform = 'scale(.85)';
+  img.style.opacity = '0';
+  setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 250);
+};
 
 window.selectOption = async (qId, idx) => {
   tt.answers[qId] = idx;
