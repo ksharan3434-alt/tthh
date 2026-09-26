@@ -544,7 +544,7 @@ import {
 import {
   initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager,
   doc, setDoc, getDoc, collection, getDocs, updateDoc, addDoc, deleteDoc,
-  query, orderBy, where, serverTimestamp
+  query, orderBy, where, serverTimestamp, runTransaction, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 // NOTE: photo batches are written as their own small subcollection docs
 // (see PROCTOR_BATCH_SIZE below) instead of one doc per photo, so writes
@@ -729,14 +729,19 @@ function analyzeProctorTick(){
     }else{
       const { quadSpread, avgR, avgG, avgB } = analyzeQuadrantsAndColor(frame.data, frame.width, frame.height);
 
-      if(!violationMsg){
-        halfBlockStreak = quadSpread > HALF_BLOCK_DIFF_THRESHOLD ? halfBlockStreak + 1 : 0;
-        if(window.__proctorDebug) console.debug('[proctor] quadSpread', Math.round(quadSpread), 'halfBlockStreak', halfBlockStreak);
-        if(halfBlockStreak >= HALF_BLOCK_STREAK_REQUIRED){
-          violationMsg = "Part of your camera view appears blocked. Please clear the area in front of the camera.";
-          halfBlockStreak = 0;
-        }
-      }
+      // Half-blocked-camera detection is intentionally NOT surfaced to the
+      // student anymore - it was the most false-positive-prone signal
+      // (ordinary lighting/angle/background could trigger it), so per
+      // instruction it now runs silently with no warning and no violation
+      // count. Kept here (rather than deleted) only so it's easy to
+      // re-enable later if ever needed.
+      // if(!violationMsg){
+      //   halfBlockStreak = quadSpread > HALF_BLOCK_DIFF_THRESHOLD ? halfBlockStreak + 1 : 0;
+      //   if(halfBlockStreak >= HALF_BLOCK_STREAK_REQUIRED){
+      //     violationMsg = "Part of your camera view appears blocked. Please clear the area in front of the camera.";
+      //     halfBlockStreak = 0;
+      //   }
+      // }
 
       if(!violationMsg){
         const maxCh = Math.max(avgR, avgG, avgB);
@@ -751,7 +756,11 @@ function analyzeProctorTick(){
         colorCastStreak = (castRatio > COLOR_CAST_RATIO_THRESHOLD && isDimToo) ? colorCastStreak + 1 : 0;
         if(window.__proctorDebug) console.debug('[proctor] castRatio', castRatio.toFixed(2), 'isDimToo', isDimToo, 'colorCastStreak', colorCastStreak);
         if(colorCastStreak >= COLOR_CAST_STREAK_REQUIRED){
+          // Unusual-colour now counts towards MAX_VIOLATIONS just like a
+          // fully black camera, per instruction - it's no longer treated
+          // as informational-only.
           violationMsg = "Unusual colour detected on camera - it may be covered by a hand or object. Please clear the camera view.";
+          violationIsCritical = true;
           colorCastStreak = 0;
         }
       }
@@ -1234,6 +1243,14 @@ async function enterTest(testId){
   const attemptSnap = await getDoc(attemptRef);
   const attempt = attemptSnap.data();
 
+  const claimed = await claimAttemptSession(attemptRef);
+  if(!claimed){
+    alert("This test is already in progress on another device for this login. Please close it there first, or ask your admin if that device has crashed/is no longer in use.");
+    showView('studentDashboard');
+    loadStudentDashboard();
+    return;
+  }
+
   tt = {
     testId, test, questions, sections, answers: attempt.answers || {}, index: 0,
     questionTimes: attempt.questionTimes || {}, qEnteredAt: Date.now(),
@@ -1266,6 +1283,9 @@ async function enterTest(testId){
   attachSecurityHandlers();
   claimSingleTab(testId);
   startProctorCapture();
+  noteAttemptWrite(); // the claim transaction above just wrote activeAt, so start the clock from now
+  startSessionHeartbeat();
+  startSessionWatch(attemptRef);
 }
 
 function renderSectionTabs(){
@@ -1327,7 +1347,13 @@ window.selectOption = async (qId, idx) => {
   tt.answers[qId] = idx;
   renderQuestion();
   renderPalette();
-  try{ await updateDoc(tt.attemptRef, { answers: tt.answers }); }catch(e){}
+  try{
+    // activeTabId/activeAt piggyback here at zero extra write cost (this
+    // write already happens on every answer) - see the session-lock note
+    // near claimAttemptSession for why.
+    await updateDoc(tt.attemptRef, { answers: tt.answers, activeTabId: TAB_ID, activeAt: Date.now() });
+    noteAttemptWrite();
+  }catch(e){}
 };
 window.ttGoto = (i) => { if(i<0||i>=tt.questions.length) return; recordElapsed(); tt.index = i; renderQuestion(); renderPalette(); saveQuestionTimes(); };
 window.ttNav = (dir) => {
@@ -1336,7 +1362,10 @@ window.ttNav = (dir) => {
   recordElapsed(); tt.index = ni; renderQuestion(); renderPalette(); saveQuestionTimes();
 };
 async function saveQuestionTimes(){
-  try{ await updateDoc(tt.attemptRef, { questionTimes: tt.questionTimes }); }catch(e){}
+  try{
+    await updateDoc(tt.attemptRef, { questionTimes: tt.questionTimes, activeTabId: TAB_ID, activeAt: Date.now() });
+    noteAttemptWrite();
+  }catch(e){}
 }
 
 function startTimer(){
@@ -1374,6 +1403,8 @@ async function submitTest(status, reason){
   stopProctorCamera();
   releaseWakeLock();
   stopPhotoBatchSafetyTimer();
+  stopSessionHeartbeat();
+  stopSessionWatch();
   await flushPhotoBatch(); // don't let a partial photo batch get lost on submit
   try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
 
@@ -1543,12 +1574,13 @@ window.acknowledgeViolation = () => {
   acquireWakeLock();
 };
 
-// Camera-black violations: shown as a brief 3s toast (doesn't pause the test
+// Camera-violation toast: shown as a brief 3s toast (doesn't pause the test
 // or force fullscreen re-entry, since a blocked camera isn't a tab/window
-// switch). Only a fully black/covered camera counts towards MAX_VIOLATIONS
-// and can auto-submit the test - half-blocked/unusual-colour warnings are
-// shown to the student but never auto-submit, since those checks are more
-// prone to false positives (lighting, background, camera quality).
+// switch). A fully black/covered camera OR an unusual-colour reading (skin/
+// object pressed on the lens) both count towards MAX_VIOLATIONS and can
+// auto-submit the test. Half-blocked-camera detection runs silently now
+// (see analyzeProctorTick) - no toast, no count - since it was the most
+// false-positive-prone signal (lighting, background, camera quality).
 let cameraWarningTimer = null;
 let cameraViolationBusy = false;
 async function registerCameraViolation(msg, isCritical){
@@ -1582,6 +1614,82 @@ async function registerCameraViolation(msg, isCritical){
   if(isCritical && tt.violationCount >= MAX_VIOLATIONS){
     setTimeout(() => submitTest('auto-submitted', 'Too many security violations'), 400);
   }
+}
+
+/* ---------------- cross-device session lock ----------------
+   The existing localStorage lock (claimSingleTab, below) only stops the
+   SAME browser from opening a second tab - it can't see a second DEVICE at
+   all. Two different students both typing the same shared code would
+   otherwise land on the exact same attempt document with no protection.
+   This adds a Firestore-backed lock so a second device is blocked too:
+   - `activeTabId` + `activeAt` on the attempt doc record who currently
+     "owns" this attempt and when they were last seen alive.
+   - Claiming happens inside a Firestore transaction (see enterTest), so
+     even two devices starting at the exact same instant can't both win.
+   - A live onSnapshot listener lets an already-active device notice if
+     someone else takes the lock over and lock itself out immediately.
+   - No dedicated fast heartbeat is used (that would cost a write every
+     time it fires, for the whole test). Instead this piggybacks on the
+     writes that already happen constantly anyway (answer select, question
+     navigation) via noteAttemptWrite(); a slow top-up timer only writes
+     if nothing else has refreshed it recently, keeping the extra write
+     cost close to zero for a normally-active student. */
+const SESSION_STALE_MS = 180000;          // no heartbeat for this long -> treat as abandoned, allow claiming elsewhere
+const SESSION_HEARTBEAT_CHECK_MS = 150000; // top-up timer tick; skipped if a real write already happened more recently
+let lastAttemptWriteAt = 0;
+let sessionHeartbeatTimer = null;
+let sessionListenerUnsub = null;
+
+function noteAttemptWrite(){ lastAttemptWriteAt = Date.now(); }
+
+function startSessionHeartbeat(){
+  stopSessionHeartbeat();
+  sessionHeartbeatTimer = setInterval(async () => {
+    if(!tt.attemptRef || tt.submitted) return;
+    if(Date.now() - lastAttemptWriteAt < SESSION_HEARTBEAT_CHECK_MS) return; // a real write already kept us fresh
+    try{
+      await updateDoc(tt.attemptRef, { activeTabId: TAB_ID, activeAt: Date.now() });
+      noteAttemptWrite();
+    }catch(e){}
+  }, SESSION_HEARTBEAT_CHECK_MS);
+}
+function stopSessionHeartbeat(){
+  if(sessionHeartbeatTimer){ clearInterval(sessionHeartbeatTimer); sessionHeartbeatTimer = null; }
+}
+
+function startSessionWatch(attemptRef){
+  stopSessionWatch();
+  sessionListenerUnsub = onSnapshot(attemptRef, (snap) => {
+    const d = snap.data();
+    if(!d || tt.submitted) return;
+    if(d.activeTabId && d.activeTabId !== TAB_ID){
+      // Someone else's claim is newer than ours - assume they've taken over
+      // (the transaction in enterTest is what actually prevents two active
+      // claims; this is the live notice for the device that lost out).
+      document.getElementById('lockedOverlay').classList.remove('hidden');
+      detachSecurityHandlers();
+      stopSessionHeartbeat();
+      if(tt.timerRef) clearInterval(tt.timerRef);
+    }
+  });
+}
+function stopSessionWatch(){
+  if(sessionListenerUnsub){ sessionListenerUnsub(); sessionListenerUnsub = null; }
+}
+
+// Returns true if the claim succeeded, false if another device currently
+// (and recently) owns this attempt.
+async function claimAttemptSession(attemptRef){
+  try{
+    return await runTransaction(db, async (txn) => {
+      const snap = await txn.get(attemptRef);
+      const d = snap.data() || {};
+      const isFresh = d.activeAt && (Date.now() - d.activeAt) < SESSION_STALE_MS;
+      if(isFresh && d.activeTabId && d.activeTabId !== TAB_ID) return false;
+      txn.update(attemptRef, { activeTabId: TAB_ID, activeAt: Date.now() });
+      return true;
+    });
+  }catch(e){ return true; } // if the check itself fails, don't block a legitimate student over it
 }
 
 /* ---------------- single-tab lock ---------------- */
