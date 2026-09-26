@@ -596,16 +596,23 @@ const HALF_BLOCK_DIFF_THRESHOLD = 60;      // brightness gap between the darkest
                                             // Old sensors/lenses often have natural vignetting (darker corners) or
                                             // uneven exposure, so this needs a fairly large gap before it counts.
 const HALF_BLOCK_STREAK_REQUIRED = 3;      // must persist for 3 straight checks
-const COLOR_CAST_RATIO_THRESHOLD = 1.4;    // one colour channel this many times stronger than the other two.
+const COLOR_CAST_RATIO_THRESHOLD = 1.7;    // one colour channel this many times stronger than the other two.
+                                            // Raised from 1.4 - that was loose enough that ordinary warm/yellow
+                                            // indoor room lighting (very common) could trigger it on its own.
+                                            // A hand/skin pressed on the lens gives a much stronger red-cast
+                                            // than typical warm lighting ever does, so this still catches that.
                                             // Only checked together with COLOR_CAST_BRIGHTNESS_CEILING below, so a
                                             // bright, well-lit colourful wall (pink/teal, warm bulb) never counts -
                                             // only a genuinely dim, reddish frame does (a hand/skin pressed on the
                                             // lens blocks most light and glows translucent red/maroon).
-const COLOR_CAST_BRIGHTNESS_CEILING = 155; // colour-cast only counts when the frame is also this dim (0-255) - a
+const COLOR_CAST_BRIGHTNESS_CEILING = 110; // colour-cast only counts when the frame is also this dim (0-255) - a
                                             // normally-lit face+background is well above this even on a cheap
                                             // camera; a hand fully/partially covering the lens (maroon/dusky-pink
-                                            // translucent glow) is not.
-const COLOR_CAST_STREAK_REQUIRED = 3;      // persist for 3 checks
+                                            // translucent glow) is not. Lowered from 155, which was high enough
+                                            // that an ordinarily-dim (but perfectly normal) room could qualify.
+const COLOR_CAST_STREAK_REQUIRED = 6;      // persist for 6 checks (was 3) - a brief lighting flicker or the
+                                            // webcam's own auto-exposure adjusting shouldn't be enough on its own;
+                                            // something actually covering the lens stays that way for a while.
 let proctorStream = null, proctorTimer = null;
 let proctorTickCount = 0, halfBlockStreak = 0, colorCastStreak = 0;
 
@@ -719,7 +726,8 @@ function analyzeProctorTick(){
 
   const frame = readProctorFrame(canvas);
   let violationMsg = null;
-  let violationIsCritical = false; // only a fully black/covered camera should be able to auto-submit the test
+  let violationIsCritical = false; // only a fully black/covered camera or unusual-colour should count towards MAX_VIOLATIONS
+  let isCameraBlack = false; // narrower than violationIsCritical - only this one forces an immediate photo flush
 
   if(frame){
     const brightness = frameBrightness(frame.gray);
@@ -730,6 +738,7 @@ function analyzeProctorTick(){
       // and a black frame makes the other checks meaningless, so skip them.
       violationMsg = "Your camera appears black or blocked. Please make sure your face is visible.";
       violationIsCritical = true;
+      isCameraBlack = true;
       halfBlockStreak = 0; colorCastStreak = 0;
     }else{
       const { quadSpread, avgR, avgG, avgB } = analyzeQuadrantsAndColor(frame.data, frame.width, frame.height);
@@ -748,27 +757,24 @@ function analyzeProctorTick(){
       //   }
       // }
 
-      if(!violationMsg){
-        const maxCh = Math.max(avgR, avgG, avgB);
-        const minOther = Math.min(...[avgR,avgG,avgB].filter(v => v !== maxCh)) || 1;
-        const castRatio = maxCh / minOther;
-        // Colour alone is never enough (a pink/teal wall behind a normal,
-        // well-lit face is completely legitimate and must not count) - it
-        // only counts when the frame is ALSO dim, which together is what a
-        // hand/skin pressed on the lens actually looks like (it blocks most
-        // light and glows translucent red/maroon).
-        const isDimToo = brightness < COLOR_CAST_BRIGHTNESS_CEILING;
-        colorCastStreak = (castRatio > COLOR_CAST_RATIO_THRESHOLD && isDimToo) ? colorCastStreak + 1 : 0;
-        if(window.__proctorDebug) console.debug('[proctor] castRatio', castRatio.toFixed(2), 'isDimToo', isDimToo, 'colorCastStreak', colorCastStreak);
-        if(colorCastStreak >= COLOR_CAST_STREAK_REQUIRED){
-          // Unusual-colour now counts towards MAX_VIOLATIONS just like a
-          // fully black camera, per instruction - it's no longer treated
-          // as informational-only.
-          violationMsg = "Unusual colour detected on camera - it may be covered by a hand or object. Please clear the camera view.";
-          violationIsCritical = true;
-          colorCastStreak = 0;
-        }
-      }
+      // Unusual-colour detection is now fully disabled - room lighting
+      // (warm bulbs, dim tube-lights, etc.) proved too unpredictable to
+      // reliably tell apart from a genuine hand/object over the lens, and
+      // it was costing writes on false alarms. It runs no checks, shows no
+      // warning, and neither counts nor writes anything. Left here (rather
+      // than deleted) only so it's easy to bring back later if needed.
+      // if(!violationMsg){
+      //   const maxCh = Math.max(avgR, avgG, avgB);
+      //   const minOther = Math.min(...[avgR,avgG,avgB].filter(v => v !== maxCh)) || 1;
+      //   const castRatio = maxCh / minOther;
+      //   const isDimToo = brightness < COLOR_CAST_BRIGHTNESS_CEILING;
+      //   colorCastStreak = (castRatio > COLOR_CAST_RATIO_THRESHOLD && isDimToo) ? colorCastStreak + 1 : 0;
+      //   if(colorCastStreak >= COLOR_CAST_STREAK_REQUIRED){
+      //     violationMsg = "Unusual colour detected on camera - it may be covered by a hand or object. Please clear the camera view.";
+      //     violationIsCritical = true;
+      //     colorCastStreak = 0;
+      //   }
+      // }
 
     }
   }
@@ -776,16 +782,15 @@ function analyzeProctorTick(){
   if(violationMsg) registerCameraViolation(violationMsg, violationIsCritical);
 
   proctorTickCount++;
-  // Only a CRITICAL (fully black/covered) violation forces an immediate
-  // photo-batch flush - that's the one that actually counts towards
-  // auto-submit, so it deserves an instant record. Half-block/colour-cast
-  // warnings are informational-only and, per the comment above, are prone
-  // to false positives (lighting, camera angle) - if those forced a flush
-  // too, a student with a slightly awkward camera angle could repeatedly
-  // bypass the batching all exam long. They still get captured, just on
-  // the normal batch schedule like any other tick.
-  if(violationIsCritical || proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
-    uploadProctorCanvas(canvas, capturedAt, violationIsCritical);
+  // Only a fully-black/covered camera forces an immediate photo-batch
+  // flush here - that's the one genuinely urgent camera signal. Unusual-
+  // colour still counts towards MAX_VIOLATIONS (see above) but no longer
+  // forces a flush on its own; it follows the normal batch schedule like
+  // any other tick. (Tab-switch/fullscreen-exit/etc. force their own
+  // flush too - see registerViolation - just not from here since they
+  // aren't camera-tick events.)
+  if(isCameraBlack || proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
+    uploadProctorCanvas(canvas, capturedAt, isCameraBlack);
   }
 }
 
@@ -1589,6 +1594,10 @@ async function registerViolation(msg){
   violationLock = true;
   tt.violationCount++;
   tt._violations = [...(tt._violations||[]), { type: msg, time: new Date().toISOString() }];
+  // Tab-switch, fullscreen-exit, devtools, back-navigation - all serious
+  // enough that whatever's sitting in the photo batch right now should be
+  // saved immediately rather than waiting for the batch to fill.
+  flushPhotoBatch();
   try{
     await updateDoc(tt.attemptRef, {
       violationCount: tt.violationCount,
@@ -1612,11 +1621,12 @@ window.acknowledgeViolation = () => {
 
 // Camera-violation toast: shown as a brief 3s toast (doesn't pause the test
 // or force fullscreen re-entry, since a blocked camera isn't a tab/window
-// switch). A fully black/covered camera OR an unusual-colour reading (skin/
-// object pressed on the lens) both count towards MAX_VIOLATIONS and can
-// auto-submit the test. Half-blocked-camera detection runs silently now
-// (see analyzeProctorTick) - no toast, no count - since it was the most
-// false-positive-prone signal (lighting, background, camera quality).
+// switch). A fully black/covered camera counts towards the same
+// MAX_VIOLATIONS as tab-switch/fullscreen-exit (one shared 3-warning
+// limit). Unusual-colour detection is fully disabled (see
+// analyzeProctorTick) and half-blocked-camera detection runs silently (no
+// toast, no count) - both were too false-positive-prone (lighting,
+// background, camera quality) to be worth the extra writes.
 let cameraWarningTimer = null;
 let cameraViolationBusy = false;
 async function registerCameraViolation(msg, isCritical){
