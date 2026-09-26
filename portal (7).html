@@ -801,7 +801,16 @@ function analyzeProctorTick(){
    safety timer also flushes a partial batch so nothing sits unsaved too
    long if a student is mid-batch when they submit or lose connection. */
 const PROCTOR_BATCH_SIZE = 10;
-const PROCTOR_BATCH_SAFETY_FLUSH_MS = 20000; // force-flush a partial batch at least this often
+// Must be LARGER than the time it normally takes to fill one batch
+// (PROCTOR_BATCH_SIZE * the ~3s gap between uploads = ~30s here), otherwise
+// this timer fires before the batch ever reaches PROCTOR_BATCH_SIZE and
+// ends up doing ALL the flushing itself - which is exactly what happened
+// at 20s (real test run showed ~1 write every ~20s instead of the
+// intended ~1 write every ~30s). 40s gives a comfortable buffer above the
+// ~30s fill time so the size-based flush is what normally fires, and this
+// timer only kicks in as a true safety net (e.g. slow uploads, a gap in
+// captures) rather than doing the routine flushing itself.
+const PROCTOR_BATCH_SAFETY_FLUSH_MS = 40000;
 let photoBatch = [];
 let photoBatchSafetyTimer = null;
 
