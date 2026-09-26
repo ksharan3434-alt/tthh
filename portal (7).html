@@ -726,8 +726,7 @@ function analyzeProctorTick(){
 
   const frame = readProctorFrame(canvas);
   let violationMsg = null;
-  let violationIsCritical = false; // only a fully black/covered camera or unusual-colour should count towards MAX_VIOLATIONS
-  let isCameraBlack = false; // narrower than violationIsCritical - only this one forces an immediate photo flush
+  let violationIsCritical = false; // only a fully black/covered camera should count towards MAX_VIOLATIONS
 
   if(frame){
     const brightness = frameBrightness(frame.gray);
@@ -738,7 +737,6 @@ function analyzeProctorTick(){
       // and a black frame makes the other checks meaningless, so skip them.
       violationMsg = "Your camera appears black or blocked. Please make sure your face is visible.";
       violationIsCritical = true;
-      isCameraBlack = true;
       halfBlockStreak = 0; colorCastStreak = 0;
     }else{
       const { quadSpread, avgR, avgG, avgB } = analyzeQuadrantsAndColor(frame.data, frame.width, frame.height);
@@ -782,15 +780,12 @@ function analyzeProctorTick(){
   if(violationMsg) registerCameraViolation(violationMsg, violationIsCritical);
 
   proctorTickCount++;
-  // Only a fully-black/covered camera forces an immediate photo-batch
-  // flush here - that's the one genuinely urgent camera signal. Unusual-
-  // colour still counts towards MAX_VIOLATIONS (see above) but no longer
-  // forces a flush on its own; it follows the normal batch schedule like
-  // any other tick. (Tab-switch/fullscreen-exit/etc. force their own
-  // flush too - see registerViolation - just not from here since they
-  // aren't camera-tick events.)
-  if(isCameraBlack || proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
-    uploadProctorCanvas(canvas, capturedAt, isCameraBlack);
+  // Photos now always follow the normal size-10 batch schedule - no event
+  // (including a black/covered camera) forces an early flush anymore.
+  // Only submitTest still forces a flush, so a partial batch at the very
+  // end of the test isn't lost.
+  if(proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
+    uploadProctorCanvas(canvas, capturedAt);
   }
 }
 
@@ -843,7 +838,7 @@ async function flushPhotoBatch(){
   }
 }
 
-function uploadProctorCanvas(canvas, capturedAt, isViolationShot){
+function uploadProctorCanvas(canvas, capturedAt){
   const partNum = currentPartNumber();
   // Name + a short slice of the uid, so two students with the same name
   // (e.g. two "Rahul Kumar") never end up sharing one folder.
@@ -866,9 +861,9 @@ function uploadProctorCanvas(canvas, capturedAt, isViolationShot){
           url: data.secure_url, time: new Date(capturedAt).toISOString(), capturedAt,
           name: `${studentFolder}/${publicId}`
         });
-        // A violation photo is important enough to not sit around waiting
-        // for the batch to fill up, so flush right away in that case.
-        if(isViolationShot || photoBatch.length >= PROCTOR_BATCH_SIZE) flushPhotoBatch();
+        // Photos are only flushed once the batch reaches PROCTOR_BATCH_SIZE
+        // now - no event forces an early flush anymore, only submitTest does.
+        if(photoBatch.length >= PROCTOR_BATCH_SIZE) flushPhotoBatch();
       }
     }catch(e){ /* a failed upload should never interrupt the test */ }
   }, 'image/jpeg', 0.7);
@@ -1594,10 +1589,10 @@ async function registerViolation(msg){
   violationLock = true;
   tt.violationCount++;
   tt._violations = [...(tt._violations||[]), { type: msg, time: new Date().toISOString() }];
-  // Tab-switch, fullscreen-exit, devtools, back-navigation - all serious
-  // enough that whatever's sitting in the photo batch right now should be
-  // saved immediately rather than waiting for the batch to fill.
-  flushPhotoBatch();
+  // Violation itself is still fully recorded (count, warning, auto-submit
+  // at MAX_VIOLATIONS) - only the photo-batch is no longer force-flushed
+  // here. Photos keep following the normal size-10 schedule; only
+  // submitTest forces a flush now.
   try{
     await updateDoc(tt.attemptRef, {
       violationCount: tt.violationCount,
