@@ -2614,7 +2614,9 @@ window.openProctorPhotos = async (attemptDocId) => {
     }else{
       body.innerHTML = photos.map(p => `
         <div class="rounded-lg overflow-hidden border border-[#f1e6d0]">
-          <img draggable="false" src="${p.url}" class="w-full h-28 object-cover">
+          <div class="w-full h-28 flex items-center justify-center bg-slate-900">
+            <img draggable="false" src="${p.url}" class="max-w-full max-h-full object-contain">
+          </div>
           <div class="text-[10px] text-slate-500 px-1.5 py-1">${new Date(p.time).toLocaleTimeString()}</div>
         </div>`).join('');
     }
