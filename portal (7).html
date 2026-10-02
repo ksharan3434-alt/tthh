@@ -780,7 +780,7 @@ function analyzeProctorTick(){
   if(violationMsg) registerCameraViolation(violationMsg, violationIsCritical);
 
   proctorTickCount++;
-  // Photos now always follow the normal size-10 batch schedule - no event
+  // Photos now always follow the normal size-15 batch schedule - no event
   // (including a black/covered camera) forces an early flush anymore.
   // Only submitTest still forces a flush, so a partial batch at the very
   // end of the test isn't lost.
@@ -800,12 +800,12 @@ function analyzeProctorTick(){
    so suspicious moments are never delayed behind the batch. A periodic
    safety timer also flushes a partial batch so nothing sits unsaved too
    long if a student is mid-batch when they submit or lose connection. */
-const PROCTOR_BATCH_SIZE = 10;
+const PROCTOR_BATCH_SIZE = 15;
 // Must be LARGER than the time it normally takes to fill one batch
-// (PROCTOR_BATCH_SIZE * the ~3s gap between uploads = ~30s here) - this is
+// (PROCTOR_BATCH_SIZE * the ~3s gap between uploads = ~45s here) - this is
 // only a ceiling on how stale a batch is allowed to get, not a fixed
 // schedule of its own (see the "stale" check below for why that matters).
-const PROCTOR_BATCH_SAFETY_FLUSH_MS = 40000;
+const PROCTOR_BATCH_SAFETY_FLUSH_MS = 60000;
 const PROCTOR_BATCH_SAFETY_CHECK_MS = 10000; // how often we glance at the clock - cheap, does NOT itself write
 let photoBatch = [];
 let photoBatchSafetyTimer = null;
@@ -816,7 +816,7 @@ function startPhotoBatchSafetyTimer(){
   lastPhotoFlushAt = Date.now();
   // This used to fire flushPhotoBatch() on its own fixed 40s clock,
   // completely unaware of the size-based flush - so it would often catch a
-  // batch just moments after a size-10 flush had already emptied it (e.g.
+  // batch just moments after a size-15 flush had already emptied it (e.g.
   // size-flush at 30s, this firing at 40s finds only ~3 photos and flushes
   // that too), producing lots of tiny 2-3-count docs instead of clean
   // 10s. Now it only checks the clock every 10s and actually flushes when
@@ -1310,6 +1310,14 @@ async function enterTest(testId){
   noteAttemptWrite(); // the claim transaction above just wrote activeAt, so start the clock from now
   startSessionHeartbeat();
   startSessionWatch(attemptRef);
+  // If the page was killed/reloaded while the student was away, check how long they were gone.
+  try{
+    const stored = parseInt(localStorage.getItem('cbt_away_' + testId) || '0', 10);
+    localStorage.removeItem('cbt_away_' + testId);
+    if(stored && (Date.now() - stored) >= AWAY_LIMIT_MS){
+      autoSubmitAway('Left the app for more than 3 seconds');
+    }
+  }catch(e){}
 }
 
 function renderSectionTabs(){
@@ -1521,13 +1529,53 @@ document.addEventListener('DOMContentLoaded', () => { lockPortrait(); checkForce
 checkForcedPortrait();
 function pause(){ document.getElementById('pausedOverlay').classList.remove('hidden'); document.getElementById('ttQuestionArea').classList.add('blurred'); document.getElementById('ttPalette').classList.add('blurred'); }
 function unpause(){ document.getElementById('pausedOverlay').classList.add('hidden'); document.getElementById('ttQuestionArea').classList.remove('blurred'); document.getElementById('ttPalette').classList.remove('blurred'); }
+/* ---- AWAY (home screen / app switch) AUTO-SUBMIT ----
+   If the student leaves the app/tab (home button, app switch, other window)
+   and stays away for AWAY_LIMIT_MS or more, the test is auto-submitted.
+   Two layers so it can't be dodged:
+   1) a timer that fires after 3s (works while the page is still alive)
+   2) a timestamp check on return (mobile browsers freeze JS in the
+      background, so the timer may not fire - the timestamp catches that)
+   The timestamp is also kept in localStorage so that even if the browser
+   kills/reloads the page while away, it's checked again on re-entry. */
+const AWAY_LIMIT_MS = 3000;
+let awayStart = null;
+let awayTimer = null;
+function awayKey(){ return tt && tt.testId ? ('cbt_away_' + tt.testId) : null; }
+function startAway(){
+  if(tt.submitted || awayStart) return;
+  awayStart = Date.now();
+  try{ const k = awayKey(); if(k) localStorage.setItem(k, String(awayStart)); }catch(e){}
+  clearTimeout(awayTimer);
+  awayTimer = setTimeout(() => autoSubmitAway('Left the app for more than 3 seconds'), AWAY_LIMIT_MS);
+}
+function endAway(){
+  if(!awayStart) return;
+  const away = Date.now() - awayStart;
+  clearTimeout(awayTimer); awayTimer = null;
+  awayStart = null;
+  try{ const k = awayKey(); if(k) localStorage.removeItem(k); }catch(e){}
+  if(!tt.submitted && away >= AWAY_LIMIT_MS) autoSubmitAway('Left the app for more than 3 seconds');
+}
+function autoSubmitAway(reason){
+  if(tt.submitted) return;
+  clearTimeout(awayTimer); awayTimer = null; awayStart = null;
+  try{ const k = awayKey(); if(k) localStorage.removeItem(k); }catch(e){}
+  tt._violations = [...(tt._violations||[]), { type: reason, time: new Date().toISOString() }];
+  document.getElementById('violationModal').classList.add('hidden');
+  submitTest('auto-submitted', reason);
+}
 function onVisibilityChange(){
   if(tt.submitted) return;
-  if(document.hidden){ pause(); registerViolation("You switched tabs or minimized the window."); }
-  else{ acquireWakeLock(); /* wake lock is auto-released by the browser when tab is hidden */ }
+  if(document.hidden){ startAway(); pause(); registerViolation("You switched tabs or minimized the window."); }
+  else{ endAway(); acquireWakeLock(); /* wake lock is auto-released by the browser when tab is hidden */ }
 }
-function onWindowBlur(){ if(!tt.submitted){ pause(); registerViolation("You left the test window."); } }
-function onWindowFocus(){ if(!tt.submitted && !document.getElementById('violationModal').classList.contains('hidden')===false) unpause(); }
+function onPageHide(){ if(!tt.submitted) startAway(); }
+function onWindowBlur(){ if(!tt.submitted){ startAway(); pause(); registerViolation("You left the test window."); } }
+function onWindowFocus(){
+  if(!tt.submitted) endAway();
+  if(!tt.submitted && !document.getElementById('violationModal').classList.contains('hidden')===false) unpause();
+}
 function onFullscreenChange(){
   if(document.fullscreenElement){ lockPortrait(); return; }
   if(!tt.submitted){ pause(); registerViolation("You exited fullscreen mode."); }
@@ -1562,6 +1610,7 @@ function attachSecurityHandlers(){
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('blur', onWindowBlur);
   window.addEventListener('focus', onWindowFocus);
+  window.addEventListener('pagehide', onPageHide);
   document.addEventListener('fullscreenchange', onFullscreenChange);
   document.addEventListener('contextmenu', blockContextMenu);
   document.addEventListener('copy', blockCopyPaste);
@@ -1583,6 +1632,8 @@ function detachSecurityHandlers(){
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('blur', onWindowBlur);
   window.removeEventListener('focus', onWindowFocus);
+  window.removeEventListener('pagehide', onPageHide);
+  clearTimeout(awayTimer); awayTimer = null; awayStart = null;
   document.removeEventListener('fullscreenchange', onFullscreenChange);
   document.removeEventListener('contextmenu', blockContextMenu);
   document.removeEventListener('copy', blockCopyPaste);
