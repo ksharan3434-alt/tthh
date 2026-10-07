@@ -1,0 +1,3016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>CBT Test Portal - Science World | RK Physics</title>
+<link rel="preconnect" href="https://firestore.googleapis.com">
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --brand-maroon:#4a121a;
+    --brand-maroon-dark:#2e0b10;
+    --brand-gold:#c99d42;
+    --brand-gold-light:#e6c877;
+    --bg:#f7f5f1;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{font-family:'Poppins',sans-serif;background:var(--bg);color:#241417;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:manipulation;}
+  .hidden{display:none !important;}
+  /* --- mobile/touch safety --- */
+  .safe-top{padding-top:env(safe-area-inset-top,0px);}
+  .safe-bottom{padding-bottom:env(safe-area-inset-bottom,0px);}
+  @media (max-width:640px){
+    /* iOS Safari auto-zooms into any input under 16px on focus - keep all
+       inputs/selects/textareas at 16px on phones so the page never jumps. */
+    .input, select, textarea{font-size:16px !important;}
+  }
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--brand-maroon);border-radius:6px;}
+  ::-webkit-scrollbar-track{background:#eee2cf;}
+  .brand-grad{background:linear-gradient(135deg,var(--brand-maroon) 0%,var(--brand-maroon-dark) 100%);}
+  .gold-text{color:var(--brand-gold);}
+  .gold-line{height:2px;width:56px;background:linear-gradient(90deg,transparent,var(--brand-gold),transparent);margin:6px auto;}
+  .card{background:#fff;border-radius:18px;box-shadow:0 4px 24px rgba(74,18,26,.08);}
+  .btn{border-radius:12px;font-weight:600;transition:.15s;padding:.7rem 1.4rem;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--brand-maroon);color:#fff;}
+  .btn-primary:hover{background:var(--brand-maroon-dark);}
+  .btn-gold{background:var(--brand-gold);color:#3a2a05;}
+  .btn-gold:hover{background:var(--brand-gold-light);}
+  .btn-outline{border:2px solid var(--brand-maroon);color:var(--brand-maroon);background:transparent;}
+  .btn-outline:hover{background:var(--brand-maroon);color:#fff;}
+  .mline{white-space:pre-wrap;word-break:break-word;}
+  textarea.input{resize:vertical;font-family:inherit;line-height:1.45;}
+  .mathsym{min-width:2rem;height:2rem;padding:0 .4rem;border:1px solid #ecdcb9;border-radius:8px;background:#fff;font-size:1rem;cursor:pointer;line-height:1;}
+  .mathsym:hover{background:#fbf1d6;border-color:#c9a24a;}
+  .input{border:2px solid #ecdcb9;border-radius:12px;padding:.65rem .9rem;width:100%;outline:none;background:#fffdf8;font-size:.9rem;}
+  .input:focus{border-color:var(--brand-gold);}
+  .code-input{border:2px solid #ecdcb9;border-radius:14px;width:100%;outline:none;background:#fffdf8;text-align:center;
+    font-weight:800;color:var(--brand-maroon);font-size:2.2rem !important;letter-spacing:.45em;padding:.55rem .4rem .55rem calc(.4rem + .45em);}
+  .code-input:focus{border-color:var(--brand-gold);}
+  .code-input::placeholder{color:#d9c9a3;letter-spacing:.3em;}
+  .badge{border-radius:999px;padding:.2rem .75rem;font-size:.7rem;font-weight:700;letter-spacing:.02em;}
+  .no-select{user-select:none;-webkit-user-select:none;}
+  .q-pill{width:40px;height:40px;border-radius:9px;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex-shrink:0;}
+  .q-pill.unanswered{background:#f1e6d0;color:#6b5a30;}
+  .q-pill.answered{background:#3f8f5f;color:#fff;}
+  .q-pill.current{outline:3px solid var(--brand-maroon);outline-offset:2px;}
+  .fade-in{animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .loader-ring{width:44px;height:44px;border:4px solid #ecdcb9;border-top-color:var(--brand-maroon);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes logoZoomSwitch{
+    0%   { transform:scale(.55) rotate(-6deg); opacity:0; }
+    30%  { transform:scale(1.08) rotate(2deg); opacity:1; }
+    50%  { transform:scale(1) rotate(0deg); opacity:1; }
+    80%  { transform:scale(1) rotate(0deg); opacity:1; }
+    100% { transform:scale(.55) rotate(6deg); opacity:0; }
+  }
+  .logo-loader-zoom{ animation:logoZoomSwitch 2s ease-in-out infinite; }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+  .opt-row{border:2px solid #ecdcb9;border-radius:12px;padding:.7rem 1rem;cursor:pointer;transition:.12s;background:#fffdf8;}
+  .opt-row:hover{border-color:var(--brand-gold);}
+  .opt-row.selected{border-color:var(--brand-maroon);background:#fbeee0;}
+  .timer-box{font-variant-numeric:tabular-nums;letter-spacing:.03em;}
+  .sec-tab{padding:.4rem 1rem;border-radius:999px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;border:2px solid #ecdcb9;color:#6b5a30;}
+  .sec-tab.active{background:var(--brand-maroon);color:#fff;border-color:var(--brand-maroon);}
+  .dropzone{border:2px dashed #ecdcb9;border-radius:12px;min-height:78px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;background:#fffdf8;transition:.15s;overflow:hidden;}
+  .dropzone.drag-over{border-color:var(--brand-gold);background:#fbeee0;}
+  .dropzone img{width:100%;height:100%;object-fit:cover;}
+  .blurred{filter:blur(16px);pointer-events:none;transition:filter .2s;}
+  img{-webkit-user-drag:none;}
+
+  /* ---- Force portrait mode on phones across the whole app ----
+     Primary trigger is the JS-managed .force-rotate-block class (checked on
+     resize/orientationchange - reliable across odd mobile browsers/webviews,
+     including the wrapped APK). The @media rule below is just a
+     belt-and-suspenders CSS-only fallback. */
+  #rotateDeviceOverlay{
+    display:none;position:fixed;inset:0;z-index:9999;background:#000;color:#fff;
+    flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;
+  }
+  html.force-rotate-block #rotateDeviceOverlay{ display:flex; }
+  @media (orientation:landscape) and (max-height:700px){
+    #rotateDeviceOverlay{ display:flex; }
+  }
+  .rotate-icon{font-size:46px;margin-bottom:14px;animation:rotateHint 1.6s ease-in-out infinite;}
+  @keyframes rotateHint{0%,100%{transform:rotate(0deg);}50%{transform:rotate(90deg);}}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen" class="fixed inset-0 brand-grad flex flex-col items-center justify-center z-50">
+  <div id="loadingLogoWrap" class="logo-loader-zoom w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-lg overflow-hidden" style="background:rgba(255,255,255,.12); box-shadow:0 6px 18px rgba(0,0,0,.35)">
+    <i id="loadingLogoIcon" class="fa-solid fa-graduation-cap text-4xl gold-text"></i>
+    <img id="loadingLogoImg" class="hidden w-full h-full object-cover" alt="Logo">
+  </div>
+  <p class="text-white/80 text-sm tracking-wide">Loading CBT Portal...</p>
+</div>
+
+<div id="loginScreen" class="hidden fixed inset-0 brand-grad flex items-center justify-center p-4">
+  <div class="card w-full max-w-sm p-7 fade-in">
+    <div class="flex flex-col items-center mb-5">
+      <div id="loginLogoIconWrap" class="w-16 h-16 rounded-2xl brand-grad flex items-center justify-center mb-3 shadow-lg overflow-hidden" style="box-shadow:0 6px 18px rgba(74,18,26,.35)">
+        <i id="loginLogoIcon" class="fa-solid fa-graduation-cap text-2xl gold-text"></i>
+        <img id="loginLogoImg" class="hidden w-full h-full object-cover" alt="Logo">
+      </div>
+      <h1 class="text-xl font-extrabold text-center tracking-wide" style="color:var(--brand-maroon)">SCIENCE WORLD</h1>
+      <p class="text-xs font-bold gold-text tracking-widest">RK PHYSICS</p>
+      <div class="gold-line"></div>
+      <p class="text-[11px] text-slate-400 tracking-wide uppercase">CBT Examination Portal</p>
+    </div>
+    <div class="space-y-3">
+      <p class="text-sm font-semibold text-center" style="color:var(--brand-maroon)">Enter your 3-digit login code</p>
+      <input id="loginCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" class="code-input" placeholder="000">
+      <button onclick="handleCodeLogin()" id="loginBtn" class="btn btn-primary w-full">Login</button>
+      <p id="loginError" class="text-xs text-red-600 text-center hidden"></p>
+      <p class="text-[11px] text-slate-400 text-center pt-1">Your code is given by the admin.</p>
+      <div class="text-center pt-1">
+        <button type="button" onclick="toggleAdminLogin()" class="text-[11px] text-slate-400 underline">Admin login</button>
+      </div>
+      <div id="adminLoginBox" class="hidden space-y-3 pt-3 border-t border-slate-100">
+        <input id="loginEmail" type="email" class="input" placeholder="Admin email" autocomplete="username">
+        <input id="loginPass" type="password" class="input" placeholder="Password" autocomplete="current-password">
+        <button onclick="handleAdminLogin()" id="adminLoginBtn" class="btn btn-outline w-full">Admin Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="appShell" class="hidden min-h-screen">
+  <nav class="brand-grad sticky top-0 z-30 shadow-lg safe-top">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div id="navLogoIconWrap" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden">
+          <i id="navLogoIcon" class="fa-solid fa-graduation-cap gold-text text-lg"></i>
+          <img id="navLogoImg" class="hidden w-full h-full object-cover" alt="Logo">
+        </div>
+        <div>
+          <div class="text-white font-extrabold text-xs sm:text-sm leading-none tracking-wide">SCIENCE WORLD</div>
+          <div class="gold-text text-[9px] sm:text-[10px] font-bold tracking-widest leading-none">RK PHYSICS · CBT PORTAL</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="navUserName" class="text-white/90 text-xs sm:text-sm hidden sm:block"></span>
+        <span id="navRoleBadge" class="badge bg-white/15 text-white"></span>
+        <button id="navLogoutBtn" onclick="doLogout()" class="text-white/80 hover:text-white text-xs sm:text-sm"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="studentDashboard" class="hidden max-w-lg mx-auto p-4 sm:p-6 fade-in">
+    <div id="mainTestStatusWrap"></div>
+  </div>
+
+  <div id="accessCodeScreen" class="hidden max-w-sm mx-auto p-4 sm:p-6 fade-in">
+    <div class="card p-7 text-center">
+      <i class="fa-solid fa-key text-3xl mb-3" style="color:var(--brand-maroon)"></i>
+      <h3 class="font-bold text-lg mb-1">Access Code Required</h3>
+      <p class="text-sm text-slate-500 mb-4">Your admin has set a special code for this account. Enter it below to log in.</p>
+      <input id="accessCodeInput" type="text" class="input text-center tracking-widest" placeholder="Enter code" autocomplete="off">
+      <p id="accessCodeError" class="text-xs text-red-600 mt-2 hidden"></p>
+      <button onclick="submitAccessCode()" class="btn btn-primary w-full mt-4">Continue</button>
+    </div>
+  </div>
+
+  <div id="declarationScreen" class="hidden fixed inset-0 bg-white z-40 flex flex-col">
+    <div class="flex-1 overflow-y-auto p-6 sm:p-10 max-w-3xl mx-auto w-full">
+      <div class="font-bold text-lg mb-1" id="declDuration">Duration: -- min</div>
+      <div id="declInstructions" class="text-sm text-slate-600 space-y-2 leading-relaxed"></div>
+    </div>
+    <div class="bg-[#f2ede2] border-t border-[#ecdcb9] p-5 shrink-0">
+      <div class="max-w-3xl mx-auto">
+        <p class="text-xs font-bold text-slate-600 mb-2">Declaration:</p>
+        <label class="flex items-start gap-2 text-xs text-slate-600">
+          <input type="checkbox" id="declCheck" onchange="document.getElementById('declProceedBtn').disabled=!this.checked; document.getElementById('declProceedBtn').classList.toggle('opacity-40', !this.checked);" class="mt-0.5 w-4 h-4 shrink-0">
+          <span>I have read all the instructions carefully and I have understood them. I agree not to cheat or use any unfair means during this examination. I understand that using unfair means for my own or someone else's advantage will lead to immediate disqualification of my test.</span>
+        </label>
+        <div class="flex justify-between mt-4">
+          <button onclick="showView('studentDashboard'); loadStudentDashboard();" class="btn btn-outline text-sm">Previous</button>
+          <button id="declProceedBtn" onclick="proceedFromDeclaration()" disabled class="btn btn-primary text-sm opacity-40">Ready to Proceed</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="phoneWarningModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.6)">
+    <div class="card w-full max-w-sm p-6 text-center fade-in">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#fdecec">
+        <i class="fa-solid fa-phone-slash text-2xl" style="color:var(--brand-maroon)"></i>
+      </div>
+      <h3 class="font-bold text-base mb-2">महत्वपूर्ण सूचना</h3>
+      <p class="text-sm text-slate-600 mb-2 leading-relaxed text-left">कृपया सुनिश्चित करें कि परीक्षा के दौरान आप:</p>
+      <ul class="text-sm text-slate-600 mb-5 leading-relaxed text-left list-disc pl-5 space-y-1">
+        <li>किसी की भी कॉल रिसीव नहीं करेंगे</li>
+        <li>किसी भी मैसेज का जवाब नहीं देंगे</li>
+        <li>संभव हो तो अपने फ़ोन को <b>Do Not Disturb (DND)</b> मोड में डाल दें</li>
+      </ul>
+      <button onclick="confirmPhoneWarningAndContinue()" id="phoneWarningBtn" class="btn btn-primary w-full">मैंने समझ लिया, आगे बढ़ें</button>
+    </div>
+  </div>
+
+  <div id="photoConsentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.6)">
+    <div class="card w-full max-w-sm p-6 text-center fade-in">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#fdecec">
+        <i class="fa-solid fa-camera text-2xl" style="color:var(--brand-maroon)"></i>
+      </div>
+      <h3 class="font-bold text-base mb-2">कैमरा सहमति</h3>
+      <p class="text-sm text-slate-600 mb-5 leading-relaxed">परीक्षा के दौरान भविष्य में सत्यापन (verification) के लिए आपकी फोटो ली जा सकती है।</p>
+      <button onclick="confirmPhotoConsentAndStart()" id="photoConsentBtn" class="btn btn-primary w-full">जारी रखें</button>
+    </div>
+  </div>
+
+  <div id="testTakingScreen" class="hidden fixed inset-0 bg-[var(--bg)] z-40 flex flex-col no-select">
+    <div class="brand-grad px-4 py-3 flex items-center justify-between shadow-lg shrink-0 safe-top">
+      <div class="flex items-center gap-2 min-w-0">
+        <div id="ttLogoIconWrap" class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden shrink-0">
+          <i id="ttLogoIcon" class="fa-solid fa-graduation-cap gold-text text-base"></i>
+          <img id="ttLogoImg" class="hidden w-full h-full object-cover" alt="Logo">
+        </div>
+        <div class="text-white min-w-0">
+          <div class="gold-text text-[9px] font-bold tracking-widest leading-none">SCIENCE WORLD</div>
+          <div class="font-bold text-sm sm:text-base truncate" id="ttTestTitle">Test</div>
+          <div class="text-[11px] text-white/70 truncate" id="ttStudentName"></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-1.5 bg-black/20 text-white/90 text-[10px] font-semibold px-2 py-1 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-red-500" style="animation:pulse 1.4s ease-in-out infinite;"></span>
+          Monitoring Active
+        </div>
+        <div class="text-white text-right">
+          <div class="text-[10px] text-white/70">Time Left</div>
+          <div id="ttTimer" class="timer-box font-bold text-lg gold-text">00:00:00</div>
+        </div>
+        <button onclick="confirmSubmitTest()" class="btn btn-gold text-xs sm:text-sm">Submit Test</button>
+      </div>
+    </div>
+    <div id="ttSectionTabs" class="flex gap-2 overflow-x-auto px-4 py-2 bg-white border-b border-[#ecdcb9] shrink-0"></div>
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 max-w-3xl w-full mx-auto">
+      <div id="ttQuestionArea"></div>
+    </div>
+    <div class="border-t border-[#ecdcb9] bg-white p-3 shrink-0 safe-bottom">
+      <div class="max-w-3xl mx-auto flex items-center justify-between gap-2">
+        <button onclick="ttNav(-1)" class="btn btn-outline text-xs sm:text-sm"><i class="fa-solid fa-arrow-left"></i> Prev</button>
+        <div id="ttPalette" class="flex-1 flex gap-3 overflow-x-auto px-2 py-1 items-center"></div>
+        <button onclick="ttNav(1)" class="btn btn-outline text-xs sm:text-sm">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <video id="proctorVideo" autoplay playsinline muted style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;"></video>
+  <canvas id="proctorCanvas" class="hidden"></canvas>
+
+  <div id="pausedOverlay" class="hidden fixed inset-0 bg-black/85 z-[45] flex flex-col items-center justify-center text-white text-center p-4">
+    <i class="fa-solid fa-eye-slash text-4xl mb-3 gold-text"></i>
+    <p class="font-bold">Test Paused</p>
+    <p class="text-xs text-white/60">Return to this tab in fullscreen to continue.</p>
+  </div>
+
+  <div id="lockedOverlay" class="hidden fixed inset-0 bg-black/95 z-[46] flex flex-col items-center justify-center text-white text-center p-4">
+    <i class="fa-solid fa-lock text-4xl mb-3 text-red-400"></i>
+    <p class="font-bold">This tab is locked</p>
+    <p class="text-xs text-white/60 max-w-xs">The test was opened in another tab/window. Only one tab can be active at a time.</p>
+  </div>
+
+  <div id="fsRequiredOverlay" class="hidden fixed inset-0 bg-black/95 z-[47] flex flex-col items-center justify-center text-white text-center p-4">
+    <i class="fa-solid fa-expand text-4xl mb-3 gold-text"></i>
+    <p class="font-bold">Fullscreen required</p>
+    <p class="text-xs text-white/70 max-w-xs mb-4">The test must stay in fullscreen. Tap the button now - the test will be <b>auto-submitted in <span id="fsCountdown">10</span>s</b> if you stay out of fullscreen.</p>
+    <button onclick="enterFullscreenNow()" class="btn btn-primary">Enter Fullscreen</button>
+  </div>
+
+  <div id="rotateDeviceOverlay">
+    <i class="fa-solid fa-mobile-screen-button rotate-icon gold-text"></i>
+    <p class="font-bold">Please rotate your device</p>
+    <p class="text-xs text-white/60 max-w-xs mt-1">This test only works in portrait mode. Turn your phone back upright to continue.</p>
+  </div>
+
+  <div id="violationModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+    <div class="card max-w-sm w-full p-6 text-center border-4 border-red-500">
+      <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3"></i>
+      <h3 class="font-bold text-lg mb-1">Warning: Security Violation Detected</h3>
+      <p class="text-sm text-slate-600 mb-3" id="violationText">Leaving the test screen is not allowed.</p>
+      <p class="text-xs text-red-500 mb-4" id="violationCount"></p>
+      <button onclick="acknowledgeViolation()" class="btn btn-primary w-full">Return to Fullscreen &amp; Continue</button>
+    </div>
+  </div>
+
+  <div id="cameraWarningToast" class="hidden fixed left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92%] p-4 rounded-lg shadow-lg bg-red-600 text-white flex items-start gap-2" style="top:calc(env(safe-area-inset-top,0px) + 1rem)">
+    <i class="fa-solid fa-video-slash mt-0.5"></i>
+    <div>
+      <p class="font-bold text-sm">Camera Warning</p>
+      <p class="text-xs" id="cameraWarningText">Your camera appears black or blocked.</p>
+    </div>
+  </div>
+
+  <div id="imgZoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0); transition:background .25s ease" onclick="closeImgZoom()">
+    <img id="imgZoomTarget" src="" draggable="false" class="max-w-full max-h-full rounded-lg" style="object-fit:contain; transform:scale(.85); opacity:0; transition:transform .25s ease, opacity .25s ease">
+    <button onclick="closeImgZoom()" class="absolute top-4 right-4 text-white text-3xl leading-none w-10 h-10 flex items-center justify-center rounded-full bg-black/50">&times;</button>
+  </div>
+
+  <div id="adminTestList" class="hidden max-w-5xl mx-auto p-4 sm:p-6 fade-in">
+    <div class="flex items-center justify-between mb-5 gap-2">
+      <h2 class="text-xl font-bold" style="color:var(--brand-maroon)">Manage Tests</h2>
+      <div class="flex gap-2 flex-wrap justify-end">
+        <button onclick="openAdminStudents()" class="btn btn-outline text-sm"><i class="fa-solid fa-users mr-1"></i> Students</button>
+        <button onclick="openAdminRestrictedAccess()" class="btn btn-outline text-sm"><i class="fa-solid fa-user-lock mr-1"></i> Special Access</button>
+        <button onclick="openAdminSettings()" class="btn btn-outline text-sm"><i class="fa-solid fa-gear mr-1"></i> Settings</button>
+        <button onclick="openTestEditor(null)" class="btn btn-primary text-sm"><i class="fa-solid fa-plus mr-1"></i> New Test</button>
+      </div>
+    </div>
+    <div id="adminTestListItems" class="space-y-3"></div>
+  </div>
+
+  <div id="adminRestrictedAccess" class="hidden max-w-2xl mx-auto p-4 sm:p-6 fade-in">
+    <button onclick="showView('adminTestList'); loadAdminTestList();" class="text-sm mb-4" style="color:var(--brand-maroon)"><i class="fa-solid fa-arrow-left mr-1"></i> Back to tests</button>
+    <div class="card p-5">
+      <h3 class="font-bold mb-1" style="color:var(--brand-maroon)"><i class="fa-solid fa-user-lock mr-1"></i> Special Access Codes</h3>
+      <p class="text-xs text-slate-500 mb-4">For a student added here: the first time they log in on a device, they must enter this code. Once entered correctly, that device won't ask again - they're a normal student after that.</p>
+      <div class="flex gap-2 mb-4">
+        <input id="raEmailInput" type="email" class="input" placeholder="Student email">
+        <input id="raCodeInput" type="text" class="input" style="max-width:140px" placeholder="Code">
+        <button onclick="addRestrictedAccess()" class="btn btn-primary text-sm shrink-0">Add</button>
+      </div>
+      <p id="raError" class="text-xs text-red-600 mb-2 hidden"></p>
+      <div id="raList" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <div id="adminStudents" class="hidden max-w-2xl mx-auto p-4 sm:p-6 fade-in">
+    <button onclick="showView('adminTestList'); loadAdminTestList();" class="text-sm mb-4" style="color:var(--brand-maroon)"><i class="fa-solid fa-arrow-left mr-1"></i> Back to tests</button>
+    <div class="card p-5">
+      <h3 class="font-bold mb-1" style="color:var(--brand-maroon)"><i class="fa-solid fa-users mr-1"></i> Students &amp; Login Codes</h3>
+      <p class="text-xs text-slate-500 mb-4">Students registered in the main Science World app are listed below. Give a student a unique 3-digit code (000-999) as a special login for another browser/device. Their attempts and results stay the same as their normal account.</p>
+      <div class="flex items-center gap-2 mb-2">
+        <input id="stuSearch" type="text" class="input" placeholder="Search name, email or code" oninput="renderStudentList()" autocomplete="off">
+        <select id="stuFilter" class="input shrink-0" style="width:auto" onchange="renderStudentList()">
+          <option value="all">All</option><option value="free">No code</option><option value="assigned">Has code</option>
+        </select>
+      </div>
+      <div class="flex items-center justify-between mb-3">
+        <span id="stuCount" class="text-[11px] text-slate-400"></span>
+        <button onclick="loadStudentList()" class="text-[11px] font-semibold" style="color:var(--brand-maroon)"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
+      </div>
+      <p id="stuError" class="text-xs text-red-600 mb-2 hidden"></p>
+      <div id="stuList" class="space-y-2"></div>
+
+      <details class="mt-5 border-t border-slate-100 pt-3">
+        <summary class="text-xs font-semibold cursor-pointer" style="color:var(--brand-maroon)">+ Add a student who is not in the main app</summary>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <input id="stuNameInput" type="text" class="input flex-1" style="min-width:9rem" placeholder="Student name" autocomplete="off">
+          <input id="stuCodeInput" type="text" inputmode="numeric" maxlength="3" class="input text-center font-bold" style="max-width:90px" placeholder="Code" autocomplete="off">
+          <button onclick="fillRandomStudentCode()" title="Pick a free code" class="btn btn-outline text-sm shrink-0" style="padding:.7rem .9rem"><i class="fa-solid fa-dice"></i></button>
+          <button id="stuAddBtn" onclick="addStudent()" class="btn btn-primary text-sm shrink-0">Add</button>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div id="adminSettings" class="hidden max-w-2xl mx-auto p-4 sm:p-6 fade-in">
+    <button onclick="showView('adminTestList'); loadAdminTestList();" class="text-sm mb-4" style="color:var(--brand-maroon)"><i class="fa-solid fa-arrow-left mr-1"></i> Back to tests</button>
+    <div class="card p-5">
+      <h3 class="font-bold mb-1" style="color:var(--brand-maroon)"><i class="fa-solid fa-gear mr-1"></i> Portal Settings</h3>
+      <p class="text-xs text-slate-500 mb-4">Controls shown across the whole CBT portal (login screen, top bar, and the student's home screen).</p>
+
+      <label class="text-xs font-semibold text-slate-500">Portal / Institute Logo</label>
+      <p class="text-[11px] text-slate-400 mb-2">Shown on the login screen and the top navigation bar instead of the default icon. A square image works best.</p>
+      <div id="logoDrop" class="dropzone mt-1" style="height:110px;width:110px;border-radius:16px;">
+        <span class="text-[11px] text-slate-400 text-center px-2"><i class="fa-solid fa-image mr-1"></i>Drop logo here</span>
+      </div>
+      <input id="logoInput" type="file" accept="image/*" class="hidden">
+      <div class="flex flex-wrap items-center gap-2 mt-4">
+        <button onclick="saveLogo()" class="btn btn-primary text-sm">Save Logo</button>
+        <button onclick="removeLogo()" class="btn btn-outline text-sm text-red-500 border-red-300">Remove Logo</button>
+        <span id="logoSaveStatus" class="text-xs text-emerald-600"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminTestEditor" class="hidden max-w-4xl mx-auto p-4 sm:p-6 fade-in">
+    <button onclick="showView('adminTestList'); loadAdminTestList();" class="text-sm mb-4" style="color:var(--brand-maroon)"><i class="fa-solid fa-arrow-left mr-1"></i> Back to tests</button>
+
+    <div class="card p-5 mb-5">
+      <h3 class="font-bold mb-4" style="color:var(--brand-maroon)"><i class="fa-solid fa-sliders mr-1"></i> Test Settings</h3>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div><label class="text-xs font-semibold text-slate-500">Test Title</label><input id="etTitle" class="input mt-1" placeholder="e.g. Physics Full Test 01"></div>
+        <div><label class="text-xs font-semibold text-slate-500">Subject</label><input id="etSubject" class="input mt-1" placeholder="e.g. Physics"></div>
+        <div><label class="text-xs font-semibold text-slate-500">Duration (minutes)</label><input id="etDuration" type="number" min="1" class="input mt-1" value="60"></div>
+        <div><label class="text-xs font-semibold text-slate-500">Default marks per question</label><input id="etMarks" type="number" min="1" class="input mt-1" value="4"></div>
+        <div class="flex items-center gap-2 pt-6">
+          <input id="etNegEnabled" type="checkbox" class="w-4 h-4">
+          <label class="text-xs font-semibold text-slate-500">Enable negative marking</label>
+        </div>
+        <div><label class="text-xs font-semibold text-slate-500">Negative marks per wrong answer</label><input id="etNegValue" type="number" min="0" step="0.25" class="input mt-1" value="1"></div>
+        <div><label class="text-xs font-semibold text-slate-500">Test Start (window opens)</label><input id="etStart" type="datetime-local" class="input mt-1"></div>
+        <div><label class="text-xs font-semibold text-slate-500">Test Finish (fixed end time)</label><input id="etEnd" type="datetime-local" class="input mt-1"></div>
+        <div><label class="text-xs font-semibold text-slate-500">Result Visible After</label><input id="etResultTime" type="datetime-local" class="input mt-1"></div>
+      </div>
+      <div class="mt-3">
+        <label class="text-xs font-semibold text-slate-500">Instructions shown on the Declaration page (before student starts)</label>
+        <textarea id="etInstructions" class="input mt-1" rows="6" placeholder="General Instructions...&#10;Read each question carefully before answering.&#10;Marking scheme, sections, etc."></textarea>
+        <p class="text-[11px] text-slate-400 mt-1">A default template is filled in below for a new test - edit it however you like.</p>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-5">
+        <button onclick="saveTest('draft')" class="btn btn-outline text-sm">Save as Draft</button>
+        <button onclick="saveTest('published')" class="btn btn-primary text-sm">Save &amp; Publish</button>
+        <span id="etSaveStatus" class="text-xs text-emerald-600 self-center"></span>
+      </div>
+    </div>
+
+    <div id="sectionManagerWrap" class="hidden">
+      <div class="card p-5 mb-5">
+        <h3 class="font-bold mb-3" style="color:var(--brand-maroon)"><i class="fa-solid fa-layer-group mr-1"></i> Sections</h3>
+        <p class="text-xs text-slate-500 mb-3">Split this test into sections (e.g. Physics, Chemistry, Maths). Questions are added to a section.</p>
+        <div class="flex gap-2 mb-4">
+          <input id="secName" class="input" placeholder="Section name e.g. Physics">
+          <button onclick="addSection()" class="btn btn-primary text-sm shrink-0">Add Section</button>
+        </div>
+        <div id="sectionsListWrap" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+
+    <div id="questionManagerWrap" class="hidden">
+      <div class="card p-5 mb-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold" style="color:var(--brand-maroon)"><i class="fa-solid fa-list-check mr-1"></i> Questions (<span id="qCount">0</span>)</h3>
+          <button onclick="toggleBulkAdd()" class="text-xs" style="color:var(--brand-maroon)">Bulk add via JSON</button>
+        </div>
+
+        <div id="bulkAddBox" class="hidden mb-4 p-3 bg-[#fbf6ea] rounded-xl">
+          <p class="text-xs text-slate-500 mb-2">Paste an array (images not supported in bulk, add those manually): [{"text":"2+2=?","options":["3","4","5","6"],"correctIndex":1}]</p>
+          <textarea id="bulkJson" class="input" rows="5" placeholder="[ ... ]"></textarea>
+          <div class="flex flex-wrap items-center gap-2 mt-2">
+            <label class="btn btn-gold text-xs cursor-pointer"><i class="fa-solid fa-file-arrow-up mr-1"></i>Upload .json file
+              <input type="file" accept=".json,.txt,application/json,text/plain" class="hidden" onchange="bulkFileChosen(this)">
+            </label>
+            <button id="bulkAddBtn" onclick="bulkAddQuestions()" class="btn btn-primary text-xs">Add All to Selected Section</button>
+          </div>
+          <div id="bulkStatus" class="text-xs mt-2"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="text-xs font-semibold text-slate-500">Section</label>
+          <select id="qSection" class="input mt-1"></select>
+        </div>
+
+        <div class="mb-3">
+          <div id="qEditBanner" class="hidden mb-3 p-2 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200"></div>
+          <div id="mathToolbox" class="mb-3"></div>
+          <label class="text-xs font-semibold text-slate-500">Question text <span class="font-normal text-slate-400">(multiple lines allowed - press Enter)</span></label>
+          <textarea id="qText" class="input mt-1" rows="5" placeholder="Question text&#10;You can write on multiple lines and use the math symbols above."></textarea>
+          <label class="text-xs font-semibold text-slate-500 mt-2 block">Question image (optional, drag &amp; drop or click)</label>
+          <div id="qImageDrop" class="dropzone mt-1" style="height:90px">
+            <span class="text-[11px] text-slate-400"><i class="fa-solid fa-image mr-1"></i>Drop image here</span>
+          </div>
+          <input id="qImageInput" type="file" accept="image/*" class="hidden">
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <textarea id="qOpt0" class="input" rows="2" placeholder="Option A"></textarea>
+            <div id="qOptImgDrop0" class="dropzone mt-1" style="height:60px"><span class="text-[10px] text-slate-400">Image (optional)</span></div>
+            <input id="qOptImgInput0" type="file" accept="image/*" class="hidden">
+          </div>
+          <div>
+            <textarea id="qOpt1" class="input" rows="2" placeholder="Option B"></textarea>
+            <div id="qOptImgDrop1" class="dropzone mt-1" style="height:60px"><span class="text-[10px] text-slate-400">Image (optional)</span></div>
+            <input id="qOptImgInput1" type="file" accept="image/*" class="hidden">
+          </div>
+          <div>
+            <textarea id="qOpt2" class="input" rows="2" placeholder="Option C"></textarea>
+            <div id="qOptImgDrop2" class="dropzone mt-1" style="height:60px"><span class="text-[10px] text-slate-400">Image (optional)</span></div>
+            <input id="qOptImgInput2" type="file" accept="image/*" class="hidden">
+          </div>
+          <div>
+            <textarea id="qOpt3" class="input" rows="2" placeholder="Option D"></textarea>
+            <div id="qOptImgDrop3" class="dropzone mt-1" style="height:60px"><span class="text-[10px] text-slate-400">Image (optional)</span></div>
+            <input id="qOptImgInput3" type="file" accept="image/*" class="hidden">
+          </div>
+        </div>
+        <div class="flex items-center gap-3 mb-3">
+          <label class="text-xs font-semibold text-slate-500">Correct option:</label>
+          <select id="qCorrect" class="input" style="width:auto">
+            <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+          </select>
+          <div class="ml-auto flex gap-2">
+            <button id="qCancelEditBtn" onclick="cancelEditQuestion()" class="btn btn-gold text-sm hidden">Cancel edit</button>
+            <button id="qSubmitBtn" onclick="addQuestion()" class="btn btn-primary text-sm">Add Question</button>
+          </div>
+        </div>
+        <div id="questionsListWrap" class="space-y-4 mt-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminSubmissions" class="hidden max-w-5xl mx-auto p-4 sm:p-6 fade-in">
+    <button onclick="showView('adminTestList'); loadAdminTestList();" class="text-sm mb-4" style="color:var(--brand-maroon)"><i class="fa-solid fa-arrow-left mr-1"></i> Back to tests</button>
+
+    <div class="card p-5 mb-5">
+      <h3 class="font-bold mb-3" style="color:var(--brand-maroon)"><i class="fa-solid fa-unlock-keyhole mr-1"></i> Result Control</h3>
+      <p class="text-xs text-slate-500 mb-1">Scheduled result-visible time: <span id="subResultTime" class="font-semibold"></span></p>
+      <p class="text-xs text-slate-500 mb-3">Current status: <span id="subResultStatus" class="font-semibold"></span></p>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="setResultOverride('release')" class="btn btn-gold text-xs">Force Release Now</button>
+        <button onclick="setResultOverride('hold')" class="btn btn-outline text-xs">Hold Results</button>
+        <button onclick="setResultOverride(null)" class="btn btn-outline text-xs">Follow Schedule</button>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h3 class="font-bold mb-3" style="color:var(--brand-maroon)"><i class="fa-solid fa-users mr-1"></i> Submissions (<span id="subCount">0</span>)</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm">
+          <thead>
+            <tr class="text-left text-slate-400 border-b border-[#ecdcb9]">
+              <th class="py-2 pr-3">Name</th><th class="py-2 pr-3">Email</th><th class="py-2 pr-3">Started</th>
+              <th class="py-2 pr-3">Submitted</th><th class="py-2 pr-3">Status</th><th class="py-2 pr-3">Violations</th>
+              <th class="py-2 pr-3">Score</th><th class="py-2"></th><th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="subTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="proctorPhotosModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="card max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold" style="color:var(--brand-maroon)"><i class="fa-solid fa-camera mr-1"></i> Proctoring Photos</h3>
+        <button onclick="closeProctorPhotos()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="proctorPhotosBody" class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs"></div>
+    </div>
+  </div>
+
+  <div id="answerSheetModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="card max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold" style="color:var(--brand-maroon)">Answer Sheet</h3>
+        <button onclick="closeAnswerSheet()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="answerSheetBody" class="space-y-3 text-sm"></div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getAuth, initializeAuth, inMemoryPersistence, onAuthStateChanged, signOut,
+  signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, deleteUser
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager,
+  doc, setDoc, getDoc, collection, getDocs, updateDoc, addDoc, deleteDoc,
+  query, orderBy, where, serverTimestamp, runTransaction, onSnapshot, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// NOTE: photo batches are written as their own small subcollection docs
+// (see PROCTOR_BATCH_SIZE below) instead of one doc per photo, so writes
+// drop ~10x. Each batch doc stays tiny (a handful of photo refs), so the
+// old 1MB-per-doc concern doesn't apply here either.
+
+/* Same Firebase project as the main Science World app, so an
+   already-logged-in browser session is picked up automatically by
+   onAuthStateChanged below -- no separate login needed IF this file is
+   hosted on the same origin/domain as the main app. */
+const firebaseConfig = {
+  apiKey: "AIzaSyCWmccCdPV25c6BR4oJF85QOWF5KF7GVg0",
+  authDomain: "science-world-4716a.firebaseapp.com",
+  projectId: "science-world-4716a",
+  storageBucket: "science-world-4716a.firebasestorage.app",
+  messagingSenderId: "221113811708",
+  appId: "1:221113811708:web:0b61e212569121bb390d79",
+  measurementId: "G-J0C8XSDQW0"
+};
+
+/* ---- DATA SEPARATION ----
+   COL_PREFIX decides which "copy" of the portal this file is. Every portal
+   collection below gets this prefix, so two files with different prefixes
+   share the Firebase project/logins but keep ALL portal data separate.
+   ("users" is the main app's collection - deliberately NOT prefixed.) */
+const COL_PREFIX = "p2_";
+const C_TESTS      = COL_PREFIX + "cbt_tests";
+const C_ATTEMPTS   = COL_PREFIX + "cbt_attempts";
+const C_SETTINGS   = COL_PREFIX + "cbt_settings";
+const C_STUDENTS   = COL_PREFIX + "cbt_students";
+const C_RESTRICTED = COL_PREFIX + "cbt_restricted_students";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() }) });
+
+const ADMIN_EMAIL = "rkphysicsadmin@gmail.com";
+const MAX_VIOLATIONS = 3;
+const TAB_ID = Math.random().toString(36).slice(2) + Date.now();
+
+/* ---------------- proctoring camera (Cloudinary) ---------------- */
+const CLOUDINARY_CLOUD_NAME = "od1ssgav";
+const CLOUDINARY_UPLOAD_PRESET = "rk_physics_notes";
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+const PROCTOR_ANALYSIS_INTERVAL_MS = 1000; // camera is checked every second (black / block / colour)
+const PROCTOR_UPLOAD_EVERY_N_TICKS = 3;    // photo is uploaded every 3rd tick (~3s) to balance monitoring
+                                            // granularity against Cloudinary/Firestore load when many students
+                                            // (e.g. 50) are testing at the same time - a violation always uploads
+                                            // immediately regardless of this counter, and the black/half-block/
+                                            // colour analysis above still runs every single tick (1s) either way.
+const CAMERA_BLACK_BRIGHTNESS_THRESHOLD = 28; // 0-255 avg luminance; below this = treated as black/blocked camera.
+                                            // Kept low (not tightened) - cheap/old phone cameras in a normally-lit
+                                            // room can already read quite dark, so this should only fire on frames
+                                            // that are genuinely near-black, not just dim.
+const HALF_BLOCK_DIFF_THRESHOLD = 60;      // brightness gap between the darkest & brightest quadrant of the frame.
+                                            // Old sensors/lenses often have natural vignetting (darker corners) or
+                                            // uneven exposure, so this needs a fairly large gap before it counts.
+const HALF_BLOCK_STREAK_REQUIRED = 3;      // must persist for 3 straight checks
+const COLOR_CAST_RATIO_THRESHOLD = 1.7;    // one colour channel this many times stronger than the other two.
+                                            // Raised from 1.4 - that was loose enough that ordinary warm/yellow
+                                            // indoor room lighting (very common) could trigger it on its own.
+                                            // A hand/skin pressed on the lens gives a much stronger red-cast
+                                            // than typical warm lighting ever does, so this still catches that.
+                                            // Only checked together with COLOR_CAST_BRIGHTNESS_CEILING below, so a
+                                            // bright, well-lit colourful wall (pink/teal, warm bulb) never counts -
+                                            // only a genuinely dim, reddish frame does (a hand/skin pressed on the
+                                            // lens blocks most light and glows translucent red/maroon).
+const COLOR_CAST_BRIGHTNESS_CEILING = 110; // colour-cast only counts when the frame is also this dim (0-255) - a
+                                            // normally-lit face+background is well above this even on a cheap
+                                            // camera; a hand fully/partially covering the lens (maroon/dusky-pink
+                                            // translucent glow) is not. Lowered from 155, which was high enough
+                                            // that an ordinarily-dim (but perfectly normal) room could qualify.
+const COLOR_CAST_STREAK_REQUIRED = 6;      // persist for 6 checks (was 3) - a brief lighting flicker or the
+                                            // webcam's own auto-exposure adjusting shouldn't be enough on its own;
+                                            // something actually covering the lens stays that way for a while.
+let proctorStream = null, proctorTimer = null;
+let proctorTickCount = 0, halfBlockStreak = 0, colorCastStreak = 0;
+
+function sanitizeForFilename(str){
+  return String(str||'student')
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 60) || 'student';
+}
+function currentPartNumber(){
+  const q = tt.questions && tt.questions[tt.index];
+  if(!q || !tt.sections || !tt.sections.length) return 1;
+  const idx = tt.sections.findIndex(s => s.id === q.sectionId);
+  return idx >= 0 ? idx + 1 : 1;
+}
+
+// Reads the canvas once and returns everything the checks below need
+// (grayscale values for brightness, raw RGBA for the colour checks) so a
+// single per-second draw+read covers every check.
+function readProctorFrame(canvas){
+  try{
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas;
+    if(!width || !height) return null;
+    const data = ctx.getImageData(0, 0, width, height).data;
+    const gray = new Float32Array(width * height);
+    for(let i = 0, p = 0; i < data.length; i += 4, p++){
+      gray[p] = (data[i] + data[i+1] + data[i+2]) / 3;
+    }
+    return { data, gray, width, height };
+  }catch(e){ return null; }
+}
+
+function frameBrightness(gray){
+  let total = 0;
+  for(let i = 0; i < gray.length; i++) total += gray[i];
+  return gray.length ? total / gray.length : 255;
+}
+
+// Splits the frame into 2x2 quadrants (brightness of each - used to catch a
+// hand/paper covering roughly half the view) and also returns the overall
+// average R/G/B (used to catch a hand/finger pressed over the lens, which
+// usually shows up as a strong red/skin colour cast filling the frame).
+function analyzeQuadrantsAndColor(data, width, height){
+  const halfW = Math.floor(width/2), halfH = Math.floor(height/2);
+  const qSum = [0,0,0,0], qCount = [0,0,0,0];
+  let rTotal=0, gTotal=0, bTotal=0, total=0;
+  for(let y = 0; y < height; y++){
+    const qy = y < halfH ? 0 : 1;
+    for(let x = 0; x < width; x++){
+      const qx = x < halfW ? 0 : 1;
+      const qi = qy*2 + qx;
+      const i = (y*width + x) * 4;
+      const r = data[i], g = data[i+1], b = data[i+2];
+      qSum[qi] += (r+g+b)/3; qCount[qi]++;
+      rTotal += r; gTotal += g; bTotal += b; total++;
+    }
+  }
+  const quadAvg = qSum.map((s,i) => qCount[i] ? s/qCount[i] : 0);
+  return {
+    quadSpread: Math.max(...quadAvg) - Math.min(...quadAvg),
+    avgR: total ? rTotal/total : 0,
+    avgG: total ? gTotal/total : 0,
+    avgB: total ? bTotal/total : 0
+  };
+}
+
+async function setupProctorCamera(){
+  try{
+    // facingMode:"user" asks for the front/selfie camera specifically - on
+    // phones (Android/iOS) a plain getUserMedia() call can otherwise hand
+    // back the rear camera, which would defeat proctoring entirely.
+    // "ideal" (not a hard constraint) so it still works on laptops/webcams
+    // that have no concept of front/rear.
+    proctorStream = await navigator.mediaDevices.getUserMedia({ video: { width:320, height:240, facingMode:{ ideal:"user" } }, audio:false });
+    const video = document.getElementById('proctorVideo');
+    video.srcObject = proctorStream;
+    await video.play().catch(()=>{});
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+function stopProctorCamera(){
+  if(proctorTimer) clearInterval(proctorTimer);
+  proctorTimer = null;
+  if(proctorStream){
+    proctorStream.getTracks().forEach(t => t.stop());
+    proctorStream = null;
+  }
+}
+
+// Runs every second: draws the current camera frame once, then runs the
+// black-screen, half-blocked and unusual-colour checks against that
+// single frame. The photo itself is only uploaded to Cloudinary every
+// PROCTOR_UPLOAD_EVERY_N_TICKS-th tick (or immediately if a violation just
+// fired), so we still get per-second monitoring without spamming uploads.
+function analyzeProctorTick(){
+  const video = document.getElementById('proctorVideo');
+  if(!video || !video.videoWidth) return;
+  const capturedAt = Date.now(); // recorded right at capture, not after the Cloudinary
+                                  // upload finishes - upload/network time varies tick to
+                                  // tick, so using it for the log timestamp made photos
+                                  // look irregularly spaced even though capture itself
+                                  // runs on a steady 1s interval.
+  const canvas = document.getElementById('proctorCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const frame = readProctorFrame(canvas);
+  let violationMsg = null;
+  let violationIsCritical = false; // only a fully black/covered camera should count towards MAX_VIOLATIONS
+
+  if(frame){
+    const brightness = frameBrightness(frame.gray);
+    if(window.__proctorDebug) console.debug('[proctor] brightness', Math.round(brightness));
+
+    if(brightness < CAMERA_BLACK_BRIGHTNESS_THRESHOLD){
+      // Camera is (near) fully black/covered - this alone is enough to warn,
+      // and a black frame makes the other checks meaningless, so skip them.
+      violationMsg = "Your camera appears black or blocked. Please make sure your face is visible.";
+      violationIsCritical = true;
+      halfBlockStreak = 0; colorCastStreak = 0;
+    }else{
+      const { quadSpread, avgR, avgG, avgB } = analyzeQuadrantsAndColor(frame.data, frame.width, frame.height);
+
+      // Half-blocked-camera detection is intentionally NOT surfaced to the
+      // student anymore - it was the most false-positive-prone signal
+      // (ordinary lighting/angle/background could trigger it), so per
+      // instruction it now runs silently with no warning and no violation
+      // count. Kept here (rather than deleted) only so it's easy to
+      // re-enable later if ever needed.
+      // if(!violationMsg){
+      //   halfBlockStreak = quadSpread > HALF_BLOCK_DIFF_THRESHOLD ? halfBlockStreak + 1 : 0;
+      //   if(halfBlockStreak >= HALF_BLOCK_STREAK_REQUIRED){
+      //     violationMsg = "Part of your camera view appears blocked. Please clear the area in front of the camera.";
+      //     halfBlockStreak = 0;
+      //   }
+      // }
+
+      // Unusual-colour detection is now fully disabled - room lighting
+      // (warm bulbs, dim tube-lights, etc.) proved too unpredictable to
+      // reliably tell apart from a genuine hand/object over the lens, and
+      // it was costing writes on false alarms. It runs no checks, shows no
+      // warning, and neither counts nor writes anything. Left here (rather
+      // than deleted) only so it's easy to bring back later if needed.
+      // if(!violationMsg){
+      //   const maxCh = Math.max(avgR, avgG, avgB);
+      //   const minOther = Math.min(...[avgR,avgG,avgB].filter(v => v !== maxCh)) || 1;
+      //   const castRatio = maxCh / minOther;
+      //   const isDimToo = brightness < COLOR_CAST_BRIGHTNESS_CEILING;
+      //   colorCastStreak = (castRatio > COLOR_CAST_RATIO_THRESHOLD && isDimToo) ? colorCastStreak + 1 : 0;
+      //   if(colorCastStreak >= COLOR_CAST_STREAK_REQUIRED){
+      //     violationMsg = "Unusual colour detected on camera - it may be covered by a hand or object. Please clear the camera view.";
+      //     violationIsCritical = true;
+      //     colorCastStreak = 0;
+      //   }
+      // }
+
+    }
+  }
+
+  if(violationMsg) registerCameraViolation(violationMsg, violationIsCritical);
+
+  proctorTickCount++;
+  // Photos now always follow the normal size-15 batch schedule - no event
+  // (including a black/covered camera) forces an early flush anymore.
+  // Only submitTest still forces a flush, so a partial batch at the very
+  // end of the test isn't lost.
+  if(proctorTickCount % PROCTOR_UPLOAD_EVERY_N_TICKS === 0){
+    uploadProctorCanvas(canvas, capturedAt);
+  }
+}
+
+/* ---------------- proctor photo write-batching ----------------
+   Uploading to Cloudinary still happens per-photo (that part is free/cheap).
+   What we batch is the Firestore WRITE that records each photo's metadata:
+   instead of 1 addDoc() per photo (~1 write every ~3s -> thousands of
+   writes over a long test), we collect PROCTOR_BATCH_SIZE photo-refs in
+   memory and flush them as a SINGLE subcollection doc. A 180-min test at
+   the default 3s capture rate goes from ~3600 writes/student to ~360.
+   A violation photo always flushes immediately (with whatever's pending)
+   so suspicious moments are never delayed behind the batch. A periodic
+   safety timer also flushes a partial batch so nothing sits unsaved too
+   long if a student is mid-batch when they submit or lose connection. */
+const PROCTOR_BATCH_SIZE = 60;   // ~60 photos x ~0.3-0.5KB each = ~30KB per doc (limit 1MB)
+// Must be LARGER than the time it normally takes to fill one batch
+// (PROCTOR_BATCH_SIZE * the ~3s gap between uploads = ~45s here) - this is
+// only a ceiling on how stale a batch is allowed to get, not a fixed
+// schedule of its own (see the "stale" check below for why that matters).
+const PROCTOR_BATCH_SAFETY_FLUSH_MS = 240000; // must be > BATCH_SIZE x ~3s (=180s)
+const PROCTOR_BATCH_SAFETY_CHECK_MS = 10000; // how often we glance at the clock - cheap, does NOT itself write
+let photoBatch = [];
+let photoBatchSafetyTimer = null;
+let lastPhotoFlushAt = Date.now();
+
+function startPhotoBatchSafetyTimer(){
+  stopPhotoBatchSafetyTimer();
+  lastPhotoFlushAt = Date.now();
+  // This used to fire flushPhotoBatch() on its own fixed 40s clock,
+  // completely unaware of the size-based flush - so it would often catch a
+  // batch just moments after a size-15 flush had already emptied it (e.g.
+  // size-flush at 30s, this firing at 40s finds only ~3 photos and flushes
+  // that too), producing lots of tiny 2-3-count docs instead of clean
+  // 10s. Now it only checks the clock every 10s and actually flushes when
+  // it's been PROCTOR_BATCH_SAFETY_FLUSH_MS since the LAST flush (size-
+  // triggered or otherwise) - so it stays silent whenever the size-based
+  // flush is doing its job, and only steps in as a genuine safety net.
+  photoBatchSafetyTimer = setInterval(() => {
+    if(Date.now() - lastPhotoFlushAt >= PROCTOR_BATCH_SAFETY_FLUSH_MS) flushPhotoBatch();
+  }, PROCTOR_BATCH_SAFETY_CHECK_MS);
+}
+function stopPhotoBatchSafetyTimer(){
+  if(photoBatchSafetyTimer){ clearInterval(photoBatchSafetyTimer); photoBatchSafetyTimer = null; }
+}
+
+async function flushPhotoBatch(){
+  if(!photoBatch.length || !tt.attemptRef) return;
+  const toSend = photoBatch;
+  photoBatch = [];
+  lastPhotoFlushAt = Date.now(); // marks "just flushed" so the safety-check above stays quiet for a while
+  try{
+    await addDoc(collection(db, C_ATTEMPTS, tt.attemptRef.id, "proctorPhotos"), {
+      photos: toSend, count: toSend.length,
+      batchCapturedAt: toSend[0].capturedAt
+    });
+  }catch(e){
+    // best-effort: a failed flush shouldn't interrupt the test, but we also
+    // don't want to silently lose the batch, so put it back for next try.
+    photoBatch = toSend.concat(photoBatch);
+  }
+}
+
+function uploadProctorCanvas(canvas, capturedAt){
+  const partNum = currentPartNumber();
+  // Name + a short slice of the uid, so two students with the same name
+  // (e.g. two "Rahul Kumar") never end up sharing one folder.
+  const studentFolder = `${sanitizeForFilename(currentUserName)}_${currentUid.slice(0,6)}`;
+  const testLabel = sanitizeForFilename((tt.test && tt.test.title) || tt.testId);
+  const publicId = `${testLabel}_Part${partNum}_${capturedAt}`;
+
+  canvas.toBlob(async (blob) => {
+    if(!blob || !tt.attemptRef) return;
+    try{
+      const fd = new FormData();
+      fd.append('file', blob);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      fd.append('folder', `cbt_proctor/${studentFolder}`);
+      fd.append('public_id', publicId);
+      const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: fd });
+      const data = await res.json();
+      if(data.secure_url){
+        photoBatch.push({
+          url: data.secure_url, time: new Date(capturedAt).toISOString(), capturedAt,
+          name: `${studentFolder}/${publicId}`
+        });
+        // Photos are only flushed once the batch reaches PROCTOR_BATCH_SIZE
+        // now - no event forces an early flush anymore, only submitTest does.
+        if(photoBatch.length >= PROCTOR_BATCH_SIZE) flushPhotoBatch();
+      }
+    }catch(e){ /* a failed upload should never interrupt the test */ }
+  }, 'image/jpeg', 0.7);
+}
+function startProctorCapture(){
+  proctorTickCount = 0; halfBlockStreak = 0; colorCastStreak = 0;
+  photoBatch = [];
+  analyzeProctorTick();
+  proctorTimer = setInterval(analyzeProctorTick, PROCTOR_ANALYSIS_INTERVAL_MS);
+  startPhotoBatchSafetyTimer();
+}
+
+let currentUser = null;
+let currentUserName = "";
+let currentUserEmail = "";
+let currentUid = "";   // uid used for attempts: main-app uid for code logins, own uid otherwise
+let currentRole = "student";
+
+function showView(id){
+  document.querySelectorAll('#appShell > div[id]').forEach(el => el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+window.showView = showView;
+function fmtDateTime(iso){
+  if(!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleString([], {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function toISO(localVal){ return localVal ? new Date(localVal).toISOString() : null; }
+function pad(n){ return n.toString().padStart(2,'0'); }
+function fmtSecs(s){ s = Math.round(s||0); const m = Math.floor(s/60), sec = s%60; return `${m}m ${pad(sec)}s`; }
+function escm(s){ return '<span class="mline">'+esc(s)+'</span>'; }
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ============================ auth ============================ */
+/* Students log in with a 3-digit code. Under the hood each code maps to a
+   Firebase email/password account (created by the admin from the Students
+   screen), so Firestore rules / uid-based attempts keep working unchanged.
+   Nothing here signs anyone out: if the browser already has a Firebase
+   session from another app on the same origin/config, onAuthStateChanged
+   below simply picks it up and the login screen is never shown. */
+const CODE_EMAIL_DOMAIN = "student.cbt.example.com";
+const codeEmail = c => `cbt${c}@${CODE_EMAIL_DOMAIN}`;
+const codePass  = c => `RKcbt-${c}-portal`;
+const isCodeEmail = e => /^cbt\d{2,3}@student\.cbt\.example\.com$/i.test(e || '');
+const codeFromEmail = e => ((/^cbt(\d{2,3})@/i.exec(e || '') || [])[1] || '');
+function prettyEmail(email){
+  return isCodeEmail(email) ? `Code ${codeFromEmail(email)}` : (email || '');
+}
+let loginBusy = false;
+window.handleCodeLogin = async () => {
+  if(loginBusy) return;
+  const input = document.getElementById('loginCode');
+  const code = input.value.replace(/\D/g,'');
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errEl.classList.add('hidden');
+  if(code.length !== 3){ errEl.textContent = "Enter your 3-digit code."; errEl.classList.remove('hidden'); return; }
+  loginBusy = true; btn.disabled = true; btn.textContent = "Logging in...";
+  try{
+    await signInWithEmailAndPassword(auth, codeEmail(code), codePass(code));
+  }catch(e){
+    const c = e.code || '';
+    if(c === 'auth/too-many-requests') errEl.textContent = "Too many attempts. Please wait a few minutes and try again.";
+    else if(c === 'auth/network-request-failed') errEl.textContent = "No internet connection. Please try again.";
+    else errEl.textContent = "Invalid code. Please check with your admin.";
+    errEl.classList.remove('hidden');
+    input.value = '';
+  }finally{
+    loginBusy = false; btn.disabled = false; btn.textContent = "Login";
+  }
+};
+window.toggleAdminLogin = () => {
+  document.getElementById('adminLoginBox').classList.toggle('hidden');
+};
+window.handleAdminLogin = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('adminLoginBtn');
+  errEl.classList.add('hidden');
+  if(!email || !pass){ errEl.textContent = "Enter admin email and password."; errEl.classList.remove('hidden'); return; }
+  if(email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+    errEl.textContent = "This login is for the admin only. Students use their 3-digit code.";
+    errEl.classList.remove('hidden'); return;
+  }
+  try{
+    btn.disabled = true; btn.textContent = "Logging in...";
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    errEl.textContent = "Login failed: " + (e.message || "check your email/password.");
+    errEl.classList.remove('hidden');
+  }finally{
+    btn.disabled = false; btn.textContent = "Admin Login";
+  }
+};
+(function wireLoginInputs(){
+  const inp = document.getElementById('loginCode');
+  inp.addEventListener('input', () => {
+    inp.value = inp.value.replace(/\D/g,'').slice(0,3);
+    if(inp.value.length === 3) window.handleCodeLogin();
+  });
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter') window.handleCodeLogin(); });
+  document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') window.handleAdminLogin(); });
+})();
+window.doLogout = async () => {
+  if(window._activeAttemptTimer) clearInterval(window._activeAttemptTimer);
+  await signOut(auth);
+};
+
+/* ============================ branding (logo) ============================ */
+async function loadBranding(){
+  try{
+    const s = await getDoc(doc(db, C_SETTINGS, "general"));
+    const logoUrl = s.exists() ? s.data().logoUrl : null;
+    const loginImg = document.getElementById('loginLogoImg');
+    const loginIcon = document.getElementById('loginLogoIcon');
+    const navImg = document.getElementById('navLogoImg');
+    const navIcon = document.getElementById('navLogoIcon');
+    const loadingImg = document.getElementById('loadingLogoImg');
+    const loadingIcon = document.getElementById('loadingLogoIcon');
+    const ttImg = document.getElementById('ttLogoImg');
+    const ttIcon = document.getElementById('ttLogoIcon');
+    if(logoUrl){
+      loginImg.src = logoUrl; loginImg.classList.remove('hidden'); loginIcon.classList.add('hidden');
+      navImg.src = logoUrl; navImg.classList.remove('hidden'); navIcon.classList.add('hidden');
+      if(loadingImg){ loadingImg.src = logoUrl; loadingImg.classList.remove('hidden'); loadingIcon.classList.add('hidden'); }
+      if(ttImg){ ttImg.src = logoUrl; ttImg.classList.remove('hidden'); ttIcon.classList.add('hidden'); }
+    }else{
+      loginImg.classList.add('hidden'); loginImg.removeAttribute('src'); loginIcon.classList.remove('hidden');
+      navImg.classList.add('hidden'); navImg.removeAttribute('src'); navIcon.classList.remove('hidden');
+      if(loadingImg){ loadingImg.classList.add('hidden'); loadingImg.removeAttribute('src'); loadingIcon.classList.remove('hidden'); }
+      if(ttImg){ ttImg.classList.add('hidden'); ttImg.removeAttribute('src'); ttIcon.classList.remove('hidden'); }
+    }
+  }catch(e){}
+}
+loadBranding();
+
+onAuthStateChanged(auth, async (user) => {
+  document.getElementById('loadingScreen').classList.add('hidden');
+  if(!user){
+    currentUser = null;
+    document.getElementById('appShell').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    loadBranding();
+    return;
+  }
+  // Code login: the code's portal account is only a "key". Data (attempts, proctor
+  // photos, locks) is stored under the student's ORIGINAL main-app uid so it is
+  // identical to logging in with their normal account.
+  currentUid = user.uid;
+  let codeInfo = null;
+  if(isCodeEmail(user.email)){
+    try{
+      const cs = await getDoc(doc(db, C_STUDENTS, codeFromEmail(user.email)));
+      if(!cs.exists()) throw new Error("This code is no longer active. Please ask your admin.");
+      codeInfo = cs.data();
+    }catch(e){
+      await signOut(auth);
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = (e.code === 'permission-denied')
+        ? "Code login is not set up yet (database permission). Please tell your admin."
+        : (e.message || "Could not verify your code. Please try again.");
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if(codeInfo.mainUid) currentUid = codeInfo.mainUid;
+  }
+  document.getElementById('loginScreen').classList.add('hidden');
+  currentUser = user;
+  currentRole = (user.email === ADMIN_EMAIL) ? "admin" : "student";
+
+  try{
+    const uSnap = await getDoc(doc(db, "users", user.uid));
+    currentUserName = (uSnap.exists() && uSnap.data().name) ? uSnap.data().name : (user.displayName || user.email || "Student");
+  }catch(e){ currentUserName = user.displayName || user.email || "Student"; }
+
+  // Code-login students: real name/email saved by admin when the code was assigned
+  currentUserEmail = user.email || '';
+  if(codeInfo){
+    currentUserEmail = codeInfo.email || prettyEmail(user.email);
+    if(codeInfo.name) currentUserName = codeInfo.name;
+    else if(currentUserName === user.email) currentUserName = "Student";
+  }
+
+  document.getElementById('navUserName').textContent = currentUserName;
+  document.getElementById('navRoleBadge').textContent = currentRole === 'admin' ? 'ADMIN' : 'STUDENT';
+  document.getElementById('navLogoutBtn').classList.toggle('hidden', currentRole !== 'admin');
+  document.getElementById('appShell').classList.remove('hidden');
+  loadBranding();
+
+  if(currentRole === 'admin'){
+    showView('adminTestList');
+    loadAdminTestList();
+  }else{
+    routeStudentAfterLogin();
+  }
+});
+
+/* ============================ image -> compressed base64 (stored directly inside Firestore, no Storage bucket used) ============================ */
+const MAX_IMG_DIM = 700;       // longest side, px
+const JPEG_QUALITY = 0.6;
+const MAX_B64_BYTES = 350000;  // ~350KB per image so a question doc (1 main + 4 option images) stays well under Firestore's 1MB doc limit
+
+function fileToImage(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.onload = () => resolve(img); img.onerror = reject; img.src = reader.result; };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function compressImageToBase64(file){
+  const img = await fileToImage(file);
+  let { width, height } = img;
+  if(width > height && width > MAX_IMG_DIM){ height = Math.round(height * (MAX_IMG_DIM/width)); width = MAX_IMG_DIM; }
+  else if(height > MAX_IMG_DIM){ width = Math.round(width * (MAX_IMG_DIM/height)); height = MAX_IMG_DIM; }
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+  let quality = JPEG_QUALITY;
+  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+  // shrink further if still too big for a comfortable Firestore doc size
+  while(dataUrl.length > MAX_B64_BYTES && quality > 0.2){
+    quality -= 0.1;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
+  return dataUrl;
+}
+function setupDropzone(zoneId, inputId, onUploaded){
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  if(!zone || !input) return;
+  zone.onclick = () => input.click();
+  zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = () => zone.classList.remove('drag-over');
+  zone.ondrop = async (e) => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) await handleImgFile(file, zone, onUploaded);
+  };
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(file) await handleImgFile(file, zone, onUploaded);
+  };
+}
+async function handleImgFile(file, zoneEl, onUploaded){
+  if(!file.type.startsWith('image/')){ alert('Please choose an image file.'); return; }
+  zoneEl.innerHTML = '<div class="loader-ring" style="width:20px;height:20px;border-width:3px;"></div>';
+  try{
+    const dataUrl = await compressImageToBase64(file);
+    if(dataUrl.length > MAX_B64_BYTES * 1.5){
+      zoneEl.innerHTML = '<span class="text-red-500 text-[10px] px-1 text-center">Image still too large after compression, try a smaller/simpler image</span>';
+      onUploaded(null);
+      return;
+    }
+    zoneEl.innerHTML = `<img draggable="false" src="${dataUrl}"><button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none">&times;</button>`;
+    zoneEl.querySelector('button').onclick = (ev) => {
+      ev.stopPropagation();
+      zoneEl.innerHTML = '<span class="text-[11px] text-slate-400"><i class="fa-solid fa-image mr-1"></i>Drop image here</span>';
+      onUploaded(null);
+    };
+    onUploaded(dataUrl);
+  }catch(e){
+    zoneEl.innerHTML = '<span class="text-red-500 text-[10px]">Could not read image, try again</span>';
+  }
+}
+
+/* ======================================================================
+   TEST TAKING
+====================================================================== */
+let tt = { testId:null, test:null, questions:[], sections:[], answers:{}, index:0, violationCount:0, secondsLeft:0, timerRef:null, submitted:false, attemptRef:null };
+
+/* ---------------- screen wake lock (keep device awake during test) ---------------- */
+let wakeLockRef = null;
+async function acquireWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLockRef = await navigator.wakeLock.request('screen');
+      wakeLockRef.addEventListener('release', () => { wakeLockRef = null; });
+    }
+  }catch(e){ /* not fatal - e.g. unsupported browser or low battery */ }
+}
+async function releaseWakeLock(){
+  try{ if(wakeLockRef){ await wakeLockRef.release(); wakeLockRef = null; } }catch(e){}
+}
+
+let pendingDeclarationTestId = null;
+
+window.startTest = async (testId) => {
+  const attemptId = testId + "_" + currentUid;
+  const existing = await getDoc(doc(db, C_ATTEMPTS, attemptId));
+  if(existing.exists()){
+    const st = existing.data().status;
+    if(st === 'in-progress') return resumeTest(testId);
+    alert("You have already attempted this test.");
+    return loadStudentDashboard();
+  }
+  const testSnap = await getDoc(doc(db, C_TESTS, testId));
+  if(!testSnap.exists()){ alert("Test not found."); return; }
+  const test = testSnap.data();
+  // Hard server-truth-adjacent check: even if someone calls startTest()
+  // directly (e.g. from the console) after the dashboard button is hidden,
+  // a closed test window still can't be joined.
+  if(test.testEnd && Date.now() > new Date(test.testEnd).getTime()){
+    alert("The test window has closed. You can no longer start this test.");
+    return loadStudentDashboard();
+  }
+  pendingDeclarationTestId = testId;
+  document.getElementById('declDuration').textContent = `Duration: ${test.durationMinutes} min`;
+  const raw = test.instructionsText && test.instructionsText.trim() ? test.instructionsText : defaultInstructions(test);
+  document.getElementById('declInstructions').innerHTML = raw.split('\n').filter(l=>l.trim()!=='').map(l=>`<p>${esc(l)}</p>`).join('');
+  document.getElementById('declCheck').checked = false;
+  document.getElementById('declProceedBtn').disabled = true;
+  document.getElementById('declProceedBtn').classList.add('opacity-40');
+  showView('declarationScreen');
+};
+
+function defaultInstructions(test){
+  return [
+    `General Instructions`,
+    `Read each question carefully before answering.`,
+    `The test is of ${test.durationMinutes} minutes duration and the maximum marks is ${(test.questionCount||0)*(test.marksPerQuestion||4)} & total questions ${test.questionCount||0}.`,
+    `Each question has 4 choices (A), (B), (C) and (D), out of which only one choice is correct.`,
+    `Marking Scheme: +${test.marksPerQuestion||4} for correct answer${test.negMarkEnabled? `, -${test.negMarkValue} for incorrect answer`:''}, 0 for unattempted.`
+  ].join('\n');
+}
+
+window.proceedFromDeclaration = () => {
+  document.getElementById('phoneWarningModal').classList.remove('hidden');
+};
+window.confirmPhoneWarningAndContinue = () => {
+  document.getElementById('phoneWarningModal').classList.add('hidden');
+  document.getElementById('photoConsentModal').classList.remove('hidden');
+};
+window.confirmPhotoConsentAndStart = async () => {
+  const btn = document.getElementById('photoConsentBtn');
+  btn.disabled = true; btn.textContent = "कृपया प्रतीक्षा करें...";
+  const testId = pendingDeclarationTestId;
+  if(!testId){ document.getElementById('photoConsentModal').classList.add('hidden'); return; }
+  try{
+    // Re-check the window here too (not just in startTest) - a student can
+    // sit on the declaration/consent screens for a while, and the window
+    // may have closed in the meantime. This is the actual moment the
+    // attempt (and its startedAt) is created, so it's the real join-time gate.
+    const freshSnap = await getDoc(doc(db, C_TESTS, testId));
+    const freshTest = freshSnap.exists() ? freshSnap.data() : null;
+    if(freshTest && freshTest.testEnd && Date.now() > new Date(freshTest.testEnd).getTime()){
+      alert("The test window has closed. You can no longer start this test.");
+      document.getElementById('photoConsentModal').classList.add('hidden');
+      showView('studentDashboard');
+      loadStudentDashboard();
+      return;
+    }
+    const attemptId = testId + "_" + currentUid;
+    await setDoc(doc(db, C_ATTEMPTS, attemptId), {
+      testId, uid: currentUid, name: currentUserName, email: currentUserEmail,
+      startedAt: serverTimestamp(), submittedAt: null, status: 'in-progress',
+      answers: {}, questionTimes: {}, violationCount: 0, violations: [], score: null
+    });
+    document.getElementById('photoConsentModal').classList.add('hidden');
+    await enterTest(testId);
+  }finally{
+    btn.disabled = false; btn.textContent = "जारी रखें";
+  }
+};
+window.resumeTest = (testId) => enterTest(testId);
+
+async function enterTest(testId){
+  const testSnap = await getDoc(doc(db, C_TESTS, testId));
+  if(!testSnap.exists()){ alert("Test not found."); return; }
+  const test = testSnap.data();
+
+  const camOk = await setupProctorCamera();
+  if(!camOk){
+    alert("Camera access is required to take this test (for proctoring). Please allow camera permission in your browser and try again.");
+    showView('studentDashboard');
+    loadStudentDashboard();
+    return;
+  }
+
+  const secSnap = await getDocs(query(collection(db, C_TESTS, testId, "sections"), orderBy("order")));
+  const sections = secSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const qSnap = await getDocs(collection(db, C_TESTS, testId, "questions"));
+  let questions = qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const secOrderMap = {}; sections.forEach((s,i)=>secOrderMap[s.id]=i);
+  questions.sort((a,b) => (secOrderMap[a.sectionId]??99) - (secOrderMap[b.sectionId]??99) || (a.qNo - b.qNo));
+
+  const attemptRef = doc(db, C_ATTEMPTS, testId + "_" + currentUid);
+  const attemptSnap = await getDoc(attemptRef);
+  const attempt = attemptSnap.data();
+
+  const claimed = await claimAttemptSession(attemptRef);
+  if(!claimed){
+    alert("This test is already in progress on another device for this login. Please close it there first, or ask your admin if that device has crashed/is no longer in use.");
+    showView('studentDashboard');
+    loadStudentDashboard();
+    return;
+  }
+
+  tt = {
+    testId, test, questions, sections, answers: attempt.answers || {}, index: 0,
+    questionTimes: attempt.questionTimes || {}, qEnteredAt: Date.now(),
+    violationCount: attempt.violationCount || 0, submitted: false, attemptRef,
+    _violations: attempt.violations || []
+  };
+
+  const startedAtMs = attempt.startedAt && attempt.startedAt.toMillis ? attempt.startedAt.toMillis() : Date.now();
+  // Once a student has legitimately joined (before the test window closed),
+  // they get their FULL duration regardless of the fixed "Test Finish" time -
+  // that finish time only controls whether NEW attempts can still be started
+  // (see the check in startTest/confirmPhotoConsentAndStart below), not how
+  // long an already-running attempt gets to run.
+  const durationEndMs = startedAtMs + test.durationMinutes * 60000;
+  tt.secondsLeft = Math.max(0, Math.floor((durationEndMs - Date.now())/1000));
+
+  document.getElementById('ttTestTitle').textContent = test.title;
+  document.getElementById('ttStudentName').textContent = currentUserName + " - " + prettyEmail(currentUserEmail);
+
+  showView('testTakingScreen');
+  document.documentElement.classList.add('testing-active');
+  checkForcedPortrait();
+  tt.qEnteredAt = Date.now();
+  renderSectionTabs();
+  renderPalette();
+  renderQuestion();
+  startTimer();
+  requestFullscreenSecure();
+  acquireWakeLock();
+  attachSecurityHandlers();
+  startFullscreenWatch();
+  claimSingleTab(testId);
+  startProctorCapture();
+  noteAttemptWrite(); // the claim transaction above just wrote activeAt, so start the clock from now
+  startSessionHeartbeat();
+  startSessionWatch(attemptRef);
+  // If the page was killed/reloaded while the student was away, check how long they were gone.
+  try{
+    const stored = parseInt(localStorage.getItem((COL_PREFIX + 'cbt_away_') + testId) || '0', 10);
+    localStorage.removeItem((COL_PREFIX + 'cbt_away_') + testId);
+    if(stored && (Date.now() - stored) >= AWAY_LIMIT_MS){
+      autoSubmitAway('Left the app for more than 10 seconds');
+    }
+  }catch(e){}
+}
+
+function renderSectionTabs(){
+  const el = document.getElementById('ttSectionTabs');
+  if(tt.sections.length <= 1){ el.innerHTML = ''; return; }
+  el.innerHTML = tt.sections.map(s => {
+    const firstIdx = tt.questions.findIndex(q => q.sectionId === s.id);
+    const curSecId = tt.questions[tt.index] ? tt.questions[tt.index].sectionId : null;
+    return `<div class="sec-tab ${s.id===curSecId?'active':''}" onclick="ttGoto(${firstIdx})">${esc(s.name)}</div>`;
+  }).join('');
+}
+
+function renderPalette(){
+  const el = document.getElementById('ttPalette');
+  let html = "", lastSec = null;
+  tt.questions.forEach((q,i) => {
+    if(tt.sections.length > 1 && q.sectionId !== lastSec){
+      lastSec = q.sectionId;
+      const sec = tt.sections.find(s=>s.id===lastSec);
+      html += `<div class="text-[10px] font-bold text-slate-400 pl-1">${sec?esc(sec.name):''}</div>`;
+    }
+    const answered = tt.answers[q.id] !== undefined;
+    html += `<div class="q-pill ${answered?'answered':'unanswered'} ${i===tt.index?'current':''}" onclick="ttGoto(${i})">${i+1}</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderQuestion(){
+  const q = tt.questions[tt.index];
+  if(!q){ document.getElementById('ttQuestionArea').innerHTML = '<p class="text-center text-slate-400">No questions in this test.</p>'; return; }
+  const selected = tt.answers[q.id];
+  const qImgHtml = q.imageUrl ? `<img draggable="false" src="${q.imageUrl}" onclick="zoomImage('${esc(q.imageUrl)}')" class="max-w-full rounded-xl mb-4 border border-[#ecdcb9] cursor-zoom-in">` : '';
+  const optsHtml = q.options.map((opt,i) => {
+    const optImg = (q.optionImages && q.optionImages[i]) ? `<img draggable="false" src="${q.optionImages[i]}" class="max-w-[160px] rounded-lg mt-2">` : '';
+    return `
+    <div class="opt-row ${selected===i?'selected':''}" onclick="selectOption('${q.id}',${i})">
+      <span class="font-bold mr-2">${String.fromCharCode(65+i)}.</span>${escm(opt)}
+      ${optImg}
+    </div>`;
+  }).join('');
+  document.getElementById('ttQuestionArea').innerHTML = `
+    <div class="text-xs text-slate-400 mb-2">Question ${tt.index+1} of ${tt.questions.length}</div>
+    ${qImgHtml}
+    <div class="font-semibold text-base mb-4">${escm(q.text)}</div>
+    <div class="space-y-2">${optsHtml}</div>`;
+  renderSectionTabs();
+}
+
+function recordElapsed(){
+  const q = tt.questions[tt.index];
+  if(!q) return;
+  const now = Date.now();
+  const elapsed = Math.max(0, Math.round((now - (tt.qEnteredAt||now))/1000));
+  tt.questionTimes[q.id] = (tt.questionTimes[q.id]||0) + elapsed;
+  tt.qEnteredAt = now;
+}
+
+window.zoomImage = (url) => {
+  const modal = document.getElementById('imgZoomModal');
+  const img = document.getElementById('imgZoomTarget');
+  img.src = url;
+  modal.classList.remove('hidden');
+  // Force a reflow so the browser registers the "before" state (transparent
+  // background, shrunk+faded image) before we flip to the "after" state -
+  // without this the transition has nothing to animate from and just snaps.
+  void modal.offsetWidth;
+  modal.style.background = 'rgba(0,0,0,.9)';
+  img.style.transform = 'scale(1)';
+  img.style.opacity = '1';
+};
+window.closeImgZoom = () => {
+  const modal = document.getElementById('imgZoomModal');
+  const img = document.getElementById('imgZoomTarget');
+  modal.style.background = 'rgba(0,0,0,0)';
+  img.style.transform = 'scale(.85)';
+  img.style.opacity = '0';
+  setTimeout(() => { modal.classList.add('hidden'); img.src = ''; }, 250);
+};
+
+/* ---------------- debounced attempt saving ----------------
+   Previously EVERY answer click and EVERY question change did its own
+   updateDoc() -> with 180 questions that is ~600-800 writes per student.
+   Now changes are kept in memory (tt.answers / tt.questionTimes, so the
+   UI is instant) and written together at most once per
+   ATTEMPT_SAVE_DEBOUNCE_MS (only if something actually changed).
+   Also flushed immediately on: tab hidden, page hide/close, and submit
+   (submitTest writes the full answers itself). Worst case a hard crash
+   loses < 1 minute of changes. */
+const ATTEMPT_SAVE_DEBOUNCE_MS = 60000;
+let attemptSaveDirty = false;
+let attemptSaveTimer = null;
+function scheduleAttemptSave(){
+  attemptSaveDirty = true;
+  if(!attemptSaveTimer) attemptSaveTimer = setTimeout(flushAttemptSave, ATTEMPT_SAVE_DEBOUNCE_MS);
+}
+function cancelAttemptSave(){
+  if(attemptSaveTimer){ clearTimeout(attemptSaveTimer); attemptSaveTimer = null; }
+  attemptSaveDirty = false;
+}
+async function flushAttemptSave(){
+  if(attemptSaveTimer){ clearTimeout(attemptSaveTimer); attemptSaveTimer = null; }
+  if(!attemptSaveDirty || !tt.attemptRef || tt.submitted) return;
+  attemptSaveDirty = false;
+  try{
+    // activeTabId/activeAt piggyback here (session-lock heartbeat) at no extra write cost
+    await updateDoc(tt.attemptRef, { answers: tt.answers, questionTimes: tt.questionTimes, activeTabId: TAB_ID, activeAt: Date.now() });
+    noteAttemptWrite();
+  }catch(e){
+    scheduleAttemptSave(); // keep it and retry next cycle
+  }
+}
+
+window.selectOption = (qId, idx) => {
+  tt.answers[qId] = idx;
+  renderQuestion();
+  renderPalette();
+  scheduleAttemptSave();
+};
+window.ttGoto = (i) => { if(i<0||i>=tt.questions.length) return; recordElapsed(); tt.index = i; renderQuestion(); renderPalette(); saveQuestionTimes(); };
+window.ttNav = (dir) => {
+  const ni = tt.index + dir;
+  if(ni < 0 || ni >= tt.questions.length) return;
+  recordElapsed(); tt.index = ni; renderQuestion(); renderPalette(); saveQuestionTimes();
+};
+function saveQuestionTimes(){ scheduleAttemptSave(); }
+
+function startTimer(){
+  updateTimerDisplay();
+  tt.timerRef = setInterval(() => {
+    tt.secondsLeft--;
+    updateTimerDisplay();
+    if(tt.secondsLeft <= 0){
+      clearInterval(tt.timerRef);
+      submitTest('auto-submitted', 'Time up');
+    }
+  }, 1000);
+  window._activeAttemptTimer = tt.timerRef;
+}
+function updateTimerDisplay(){
+  const s = Math.max(0, tt.secondsLeft);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  document.getElementById('ttTimer').textContent = `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
+window.confirmSubmitTest = () => {
+  if(confirm("Submit the test now? You cannot change answers after submitting.")){
+    submitTest('submitted', 'Manual submit');
+  }
+};
+
+async function submitTest(status, reason){
+  if(tt.submitted) return;
+  tt.submitted = true;
+  recordElapsed();
+  cancelAttemptSave();
+  document.documentElement.classList.remove('testing-active');
+  if(tt.timerRef) clearInterval(tt.timerRef);
+  detachSecurityHandlers();
+  releaseSingleTab();
+  stopProctorCamera();
+  releaseWakeLock();
+  stopPhotoBatchSafetyTimer();
+  stopSessionHeartbeat();
+  stopSessionWatch();
+  await flushPhotoBatch(); // don't let a partial photo batch get lost on submit
+  try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
+
+  let correctCount=0, wrongCount=0, unattempted=0, score=0, totalMarks=0;
+  const defaultMarks = tt.test.marksPerQuestion || 4;
+  const neg = tt.test.negMarkEnabled ? (tt.test.negMarkValue || 0) : 0;
+
+  const sectionMap = {};
+  tt.sections.forEach(s => { sectionMap[s.id] = { sectionId: s.id, name: s.name, correct:0, wrong:0, unattempted:0, marks:0, maxMarks:0 }; });
+
+  tt.questions.forEach(q => {
+    totalMarks += defaultMarks;
+    const sec = sectionMap[q.sectionId] || (sectionMap[q.sectionId] = { sectionId: q.sectionId, name:'General', correct:0, wrong:0, unattempted:0, marks:0, maxMarks:0 });
+    sec.maxMarks += defaultMarks;
+    const ans = tt.answers[q.id];
+    if(ans === undefined){ unattempted++; sec.unattempted++; return; }
+    if(ans === q.correctIndex){ correctCount++; score += defaultMarks; sec.correct++; sec.marks += defaultMarks; }
+    else{ wrongCount++; score -= neg; sec.wrong++; sec.marks -= neg; }
+  });
+  const sectionResults = Object.values(sectionMap);
+
+  await updateDoc(tt.attemptRef, {
+    status, submittedAt: serverTimestamp(), answers: tt.answers, questionTimes: tt.questionTimes,
+    score, totalMarks, correctCount, wrongCount,
+    unattemptedCount: unattempted, sectionResults, submitReason: reason
+  });
+
+  showView('studentDashboard');
+  loadStudentDashboard();
+  alert("Test submitted. Results will be available at " + fmtDateTime(tt.test.resultReleaseTime) + " (or when the admin releases them).");
+}
+
+/* ---------------- security handlers ---------------- */
+function requestFullscreenSecure(){
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+  if(req){ try{ const p = req.call(el); if(p && p.catch) p.catch(()=>{ lockPortrait(); }); }catch(e){ lockPortrait(); } }
+  else lockPortrait();
+}
+/* Best-effort native orientation lock (works on Android Chrome/Edge inside
+   fullscreen). iOS Safari doesn't support this API at all, so the
+   JS + CSS rotate-device overlay below is the real cross-device fix - this
+   native lock is just an extra layer where the browser allows it. */
+function lockPortrait(){
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      screen.orientation.lock('portrait').catch(()=>{});
+    }
+  }catch(e){}
+}
+/* Belt-and-suspenders orientation check: don't rely on a single CSS
+   breakpoint (phone CSS dimensions vary a lot - display-size settings,
+   phablets, etc). Instead directly check width vs height and a generous
+   "this is a phone, not a laptop/monitor" width cap, and flip a class that
+   the CSS above turns into the full-screen rotate-back overlay. Runs on
+   resize/orientationchange, which also fires on rotation in every browser,
+   including in-app webviews where matchMedia can be flaky. Applies across
+   the whole app (not just the test screen) - the phone should never be
+   allowed to sit in landscape here. */
+function checkForcedPortrait(){
+  const w = window.innerWidth, h = window.innerHeight;
+  const isLandscapePhoneish = w > h && w <= 950;
+  document.documentElement.classList.toggle('force-rotate-block', isLandscapePhoneish);
+}
+window.addEventListener('resize', checkForcedPortrait);
+window.addEventListener('orientationchange', () => setTimeout(checkForcedPortrait, 150));
+document.addEventListener('DOMContentLoaded', () => { lockPortrait(); checkForcedPortrait(); });
+checkForcedPortrait();
+function pause(){ document.getElementById('pausedOverlay').classList.remove('hidden'); document.getElementById('ttQuestionArea').classList.add('blurred'); document.getElementById('ttPalette').classList.add('blurred'); }
+function unpause(){ document.getElementById('pausedOverlay').classList.add('hidden'); document.getElementById('ttQuestionArea').classList.remove('blurred'); document.getElementById('ttPalette').classList.remove('blurred'); }
+/* ---- AWAY (home screen / app switch) AUTO-SUBMIT ----
+   If the student leaves the app/tab (home button, app switch, other window)
+   and stays away for AWAY_LIMIT_MS or more, the test is auto-submitted.
+   Two layers so it can't be dodged:
+   1) a timer that fires after 10s (works while the page is still alive)
+   2) a timestamp check on return (mobile browsers freeze JS in the
+      background, so the timer may not fire - the timestamp catches that)
+   The timestamp is also kept in localStorage so that even if the browser
+   kills/reloads the page while away, it's checked again on re-entry. */
+const AWAY_LIMIT_MS = 10000;
+let awayStart = null;
+let awayTimer = null;
+let awayReason = 'Left the app for more than 10 seconds';
+let fsGraceUntil = 0;     // after test start, give the student a few seconds to tap "Enter Fullscreen"
+let fsCheckRef = null;
+const FS_START_GRACE_MS = 10000;
+function awayKey(){ return tt && tt.testId ? ((COL_PREFIX + 'cbt_away_') + tt.testId) : null; }
+function startAway(reason){
+  if(tt.submitted || awayStart) return;
+  awayReason = (typeof reason === 'string' && reason) ? reason : 'Left the app for more than 10 seconds';
+  awayStart = Date.now();
+  try{ const k = awayKey(); if(k) localStorage.setItem(k, String(awayStart)); }catch(e){}
+  clearTimeout(awayTimer);
+  awayTimer = setTimeout(() => autoSubmitAway(awayReason), AWAY_LIMIT_MS);
+}
+function endAway(){
+  if(!awayStart) return;
+  // Still out of fullscreen (after the start grace)? Then the student has NOT really come back - keep the clock running.
+  if(fullscreenSupported() && !isFullscreenNow() && Date.now() >= fsGraceUntil) return;
+  const away = Date.now() - awayStart;
+  clearTimeout(awayTimer); awayTimer = null;
+  awayStart = null;
+  try{ const k = awayKey(); if(k) localStorage.removeItem(k); }catch(e){}
+  if(!tt.submitted && away >= AWAY_LIMIT_MS) autoSubmitAway(awayReason);
+}
+function autoSubmitAway(reason){
+  if(tt.submitted) return;
+  clearTimeout(awayTimer); awayTimer = null; awayStart = null;
+  try{ const k = awayKey(); if(k) localStorage.removeItem(k); }catch(e){}
+  tt._violations = [...(tt._violations||[]), { type: reason, time: new Date().toISOString() }];
+  document.getElementById('violationModal').classList.add('hidden');
+  submitTest('auto-submitted', reason);
+}
+/* ---- FULLSCREEN ENFORCEMENT ----
+   The fullscreen request can silently fail (needs a fresh tap, page refresh,
+   browser quirks) while everything else keeps working. So we don't trust the
+   request - we CHECK the real state every second:
+   - not fullscreen -> blocking overlay with an "Enter Fullscreen" button
+   - still not fullscreen after FS_START_GRACE_MS (start/resume) or 10s (after
+     leaving fullscreen mid-test) -> auto-submit, same rule as leaving the app.
+   Browsers that cannot do fullscreen at all (iPhone Safari, many in-app
+   browsers: document.fullscreenEnabled is false) are not blocked. */
+function fullscreenSupported(){ return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled); }
+function isFullscreenNow(){
+  if(document.fullscreenElement || document.webkitFullscreenElement) return true;
+  try{
+    if(window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches) return true;
+  }catch(e){}
+  // desktop F11 fullscreen does not set fullscreenElement - the window simply fills the screen
+  return window.innerWidth >= screen.width - 1 && window.innerHeight >= screen.height - 1;
+}
+function checkFullscreenState(){
+  if(tt.submitted) return;
+  const ov = document.getElementById('fsRequiredOverlay');
+  if(isFullscreenNow()){
+    ov.classList.add('hidden');
+    return;
+  }
+  ov.classList.remove('hidden');
+  const inGrace = Date.now() < fsGraceUntil;
+  if(!inGrace) startAway('Exited fullscreen for more than 10 seconds');
+  const deadline = (awayStart ? awayStart : fsGraceUntil) + AWAY_LIMIT_MS;
+  const left = Math.max(0, Math.ceil((deadline - Date.now())/1000));
+  document.getElementById('fsCountdown').textContent = left;
+}
+function startFullscreenWatch(){
+  stopFullscreenWatch();
+  if(!fullscreenSupported()) return;
+  fsGraceUntil = Date.now() + FS_START_GRACE_MS;
+  fsCheckRef = setInterval(checkFullscreenState, 1000);
+  setTimeout(checkFullscreenState, 300);
+}
+function stopFullscreenWatch(){
+  if(fsCheckRef){ clearInterval(fsCheckRef); fsCheckRef = null; }
+  fsGraceUntil = 0;
+  const ov = document.getElementById('fsRequiredOverlay');
+  if(ov) ov.classList.add('hidden');
+}
+window.enterFullscreenNow = () => {
+  requestFullscreenSecure();
+  setTimeout(checkFullscreenState, 400);
+};
+function onVisibilityChange(){
+  if(tt.submitted) return;
+  if(document.hidden){ flushAttemptSave(); startAway(); pause(); registerViolation("You switched tabs or minimized the window."); }
+  else{ endAway(); acquireWakeLock(); /* wake lock is auto-released by the browser when tab is hidden */ }
+}
+function onPageHide(){ if(!tt.submitted){ flushAttemptSave(); startAway(); } }
+function onWindowBlur(){ if(!tt.submitted){ startAway(); pause(); registerViolation("You left the test window."); } }
+function onWindowFocus(){
+  if(!tt.submitted) endAway();
+  if(!tt.submitted && !document.getElementById('violationModal').classList.contains('hidden')===false) unpause();
+}
+function onFullscreenChange(){
+  if(document.fullscreenElement){ lockPortrait(); if(!tt.submitted){ endAway(); checkFullscreenState(); } return; }
+  if(!tt.submitted){
+    startAway('Exited fullscreen for more than 10 seconds');
+    pause();
+    registerViolation("You exited fullscreen mode.");
+    checkFullscreenState();
+  }
+}
+function blockContextMenu(e){ e.preventDefault(); }
+function blockCopyPaste(e){ e.preventDefault(); }
+function blockKeys(e){
+  const k = e.key ? e.key.toLowerCase() : '';
+  const blocked =
+    e.key === 'F12' ||
+    (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
+    (e.ctrlKey && ['u','s','p','a','f'].includes(k));
+  if(blocked) e.preventDefault();
+}
+function onBeforeUnload(e){
+  if(!tt.submitted){
+    e.preventDefault(); e.returnValue='';
+    flushPhotoBatch(); // best-effort: browser may or may not let this finish
+    flushAttemptSave();
+  }
+}
+function trapBack(){
+  history.pushState(null, '', location.href);
+}
+function onPopState(){
+  if(!tt.submitted){
+    history.pushState(null, '', location.href);
+    registerViolation("Attempted to navigate back.");
+  }
+}
+let devtoolsCheckRef = null;
+function attachSecurityHandlers(){
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('blur', onWindowBlur);
+  window.addEventListener('focus', onWindowFocus);
+  window.addEventListener('pagehide', onPageHide);
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+  document.addEventListener('contextmenu', blockContextMenu);
+  document.addEventListener('copy', blockCopyPaste);
+  document.addEventListener('cut', blockCopyPaste);
+  document.addEventListener('paste', blockCopyPaste);
+  document.addEventListener('keydown', blockKeys);
+  window.addEventListener('beforeunload', onBeforeUnload);
+  trapBack();
+  window.addEventListener('popstate', onPopState);
+  devtoolsCheckRef = setInterval(() => {
+    if(tt.submitted) return;
+    const threshold = 160;
+    if(window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold){
+      registerViolation("Developer tools appear to be open.");
+    }
+  }, 2500);
+}
+function detachSecurityHandlers(){
+  stopFullscreenWatch();
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('blur', onWindowBlur);
+  window.removeEventListener('focus', onWindowFocus);
+  window.removeEventListener('pagehide', onPageHide);
+  clearTimeout(awayTimer); awayTimer = null; awayStart = null;
+  document.removeEventListener('fullscreenchange', onFullscreenChange);
+  document.removeEventListener('contextmenu', blockContextMenu);
+  document.removeEventListener('copy', blockCopyPaste);
+  document.removeEventListener('cut', blockCopyPaste);
+  document.removeEventListener('paste', blockCopyPaste);
+  document.removeEventListener('keydown', blockKeys);
+  window.removeEventListener('beforeunload', onBeforeUnload);
+  window.removeEventListener('popstate', onPopState);
+  if(devtoolsCheckRef) clearInterval(devtoolsCheckRef);
+}
+let violationLock = false;
+async function registerViolation(msg){
+  if(violationLock || tt.submitted) return;
+  violationLock = true;
+  tt.violationCount++;
+  tt._violations = [...(tt._violations||[]), { type: msg, time: new Date().toISOString() }];
+  // Violation itself is still fully recorded (count, warning, auto-submit
+  // at MAX_VIOLATIONS) - only the photo-batch is no longer force-flushed
+  // here. Photos keep following the normal size-10 schedule; only
+  // submitTest forces a flush now.
+  document.getElementById('violationText').textContent = msg;
+  document.getElementById('violationCount').textContent = `Warning ${tt.violationCount} of ${MAX_VIOLATIONS}. The test auto-submits after ${MAX_VIOLATIONS} warnings, or if you stay away for more than 10 seconds.`;
+  document.getElementById('violationModal').classList.remove('hidden');
+  try{
+    await updateDoc(tt.attemptRef, {
+      violationCount: tt.violationCount,
+      violations: tt._violations
+    });
+  }catch(e){}
+  if(tt.violationCount >= MAX_VIOLATIONS){
+    setTimeout(() => submitTest('auto-submitted', 'Too many security violations'), 400);
+  }
+}
+window.acknowledgeViolation = () => {
+  document.getElementById('violationModal').classList.add('hidden');
+  unpause();
+  violationLock = false;
+  requestFullscreenSecure();
+  acquireWakeLock();
+};
+
+// Camera-violation toast: shown as a brief 3s toast (doesn't pause the test
+// or force fullscreen re-entry, since a blocked camera isn't a tab/window
+// switch). A fully black/covered camera counts towards the same
+// MAX_VIOLATIONS as tab-switch/fullscreen-exit (one shared 3-warning
+// limit). Unusual-colour detection is fully disabled (see
+// analyzeProctorTick) and half-blocked-camera detection runs silently (no
+// toast, no count) - both were too false-positive-prone (lighting,
+// background, camera quality) to be worth the extra writes.
+let cameraWarningTimer = null;
+let cameraViolationBusy = false;
+async function registerCameraViolation(msg, isCritical){
+  if(tt.submitted || cameraViolationBusy) return;
+  cameraViolationBusy = true;
+
+  let countText;
+  if(isCritical){
+    tt.violationCount++;
+    tt._violations = [...(tt._violations||[]), { type: msg, time: new Date().toISOString() }];
+    try{
+      await updateDoc(tt.attemptRef, {
+        violationCount: tt.violationCount,
+        violations: tt._violations
+      });
+    }catch(e){}
+    countText = ` (Warning ${tt.violationCount} of ${MAX_VIOLATIONS})`;
+  }else{
+    countText = ''; // non-critical camera warning: informational only, doesn't count towards auto-submit
+  }
+
+  const toast = document.getElementById('cameraWarningToast');
+  document.getElementById('cameraWarningText').textContent = `${msg}${countText}`;
+  toast.classList.remove('hidden');
+  clearTimeout(cameraWarningTimer);
+  cameraWarningTimer = setTimeout(() => {
+    toast.classList.add('hidden');
+    cameraViolationBusy = false;
+  }, 3000);
+
+  if(isCritical && tt.violationCount >= MAX_VIOLATIONS){
+    setTimeout(() => submitTest('auto-submitted', 'Too many security violations'), 400);
+  }
+}
+
+/* ---------------- cross-device session lock ----------------
+   The existing localStorage lock (claimSingleTab, below) only stops the
+   SAME browser from opening a second tab - it can't see a second DEVICE at
+   all. Two different students both typing the same shared code would
+   otherwise land on the exact same attempt document with no protection.
+   This adds a Firestore-backed lock so a second device is blocked too:
+   - `activeTabId` + `activeAt` on the attempt doc record who currently
+     "owns" this attempt and when they were last seen alive.
+   - Claiming happens inside a Firestore transaction (see enterTest), so
+     even two devices starting at the exact same instant can't both win.
+   - A live onSnapshot listener lets an already-active device notice if
+     someone else takes the lock over and lock itself out immediately.
+   - No dedicated fast heartbeat is used (that would cost a write every
+     time it fires, for the whole test). Instead this piggybacks on the
+     writes that already happen constantly anyway (answer select, question
+     navigation) via noteAttemptWrite(); a slow top-up timer only writes
+     if nothing else has refreshed it recently, keeping the extra write
+     cost close to zero for a normally-active student. */
+const SESSION_STALE_MS = 180000;          // no heartbeat for this long -> treat as abandoned, allow claiming elsewhere
+const SESSION_HEARTBEAT_CHECK_MS = 150000; // top-up timer tick; skipped if a real write already happened more recently
+let lastAttemptWriteAt = 0;
+let sessionHeartbeatTimer = null;
+let sessionListenerUnsub = null;
+
+function noteAttemptWrite(){ lastAttemptWriteAt = Date.now(); }
+
+function startSessionHeartbeat(){
+  stopSessionHeartbeat();
+  sessionHeartbeatTimer = setInterval(async () => {
+    if(!tt.attemptRef || tt.submitted) return;
+    if(Date.now() - lastAttemptWriteAt < SESSION_HEARTBEAT_CHECK_MS) return; // a real write already kept us fresh
+    try{
+      await updateDoc(tt.attemptRef, { activeTabId: TAB_ID, activeAt: Date.now() });
+      noteAttemptWrite();
+    }catch(e){}
+  }, SESSION_HEARTBEAT_CHECK_MS);
+}
+function stopSessionHeartbeat(){
+  if(sessionHeartbeatTimer){ clearInterval(sessionHeartbeatTimer); sessionHeartbeatTimer = null; }
+}
+
+function startSessionWatch(attemptRef){
+  stopSessionWatch();
+  sessionListenerUnsub = onSnapshot(attemptRef, (snap) => {
+    const d = snap.data();
+    if(!d || tt.submitted) return;
+    if(d.activeTabId && d.activeTabId !== TAB_ID){
+      // Someone else's claim is newer than ours - assume they've taken over
+      // (the transaction in enterTest is what actually prevents two active
+      // claims; this is the live notice for the device that lost out).
+      document.getElementById('lockedOverlay').classList.remove('hidden');
+      cancelAttemptSave();
+      detachSecurityHandlers();
+      stopSessionHeartbeat();
+      if(tt.timerRef) clearInterval(tt.timerRef);
+    }
+  });
+}
+function stopSessionWatch(){
+  if(sessionListenerUnsub){ sessionListenerUnsub(); sessionListenerUnsub = null; }
+}
+
+// Returns true if the claim succeeded, false if another device currently
+// (and recently) owns this attempt.
+async function claimAttemptSession(attemptRef){
+  try{
+    return await runTransaction(db, async (txn) => {
+      const snap = await txn.get(attemptRef);
+      const d = snap.data() || {};
+      const isFresh = d.activeAt && (Date.now() - d.activeAt) < SESSION_STALE_MS;
+      if(isFresh && d.activeTabId && d.activeTabId !== TAB_ID) return false;
+      txn.update(attemptRef, { activeTabId: TAB_ID, activeAt: Date.now() });
+      return true;
+    });
+  }catch(e){ return true; } // if the check itself fails, don't block a legitimate student over it
+}
+
+/* ---------------- single-tab lock ---------------- */
+let singleTabKey = null;
+function claimSingleTab(testId){
+  singleTabKey = `${COL_PREFIX}cbt_lock_${testId}_${currentUid}`;
+  localStorage.setItem(singleTabKey, JSON.stringify({ tabId: TAB_ID, ts: Date.now() }));
+  window.addEventListener('storage', onStorageLock);
+}
+function onStorageLock(e){
+  if(e.key !== singleTabKey || tt.submitted) return;
+  try{
+    const val = JSON.parse(e.newValue || '{}');
+    if(val.tabId !== TAB_ID){
+      document.getElementById('lockedOverlay').classList.remove('hidden');
+      detachSecurityHandlers();
+      if(tt.timerRef) clearInterval(tt.timerRef);
+    }
+  }catch(err){}
+}
+function releaseSingleTab(){
+  window.removeEventListener('storage', onStorageLock);
+  if(singleTabKey) localStorage.removeItem(singleTabKey);
+}
+
+/* ======================================================================
+   Restricted-access students: admin sets a code for a specific email.
+   The FIRST time that account logs in on a device it must enter the
+   matching code; once verified it's remembered (localStorage) so that
+   account behaves completely normally from then on - no repeat prompts,
+   no other restriction anywhere else in the app.
+====================================================================== */
+let restrictedAccessInfo = null;
+async function checkRestrictedAccess(){
+  try{
+    const rSnap = await getDoc(doc(db, C_RESTRICTED, (currentUserEmail||'').toLowerCase()));
+    restrictedAccessInfo = rSnap.exists() ? rSnap.data() : null;
+  }catch(e){ restrictedAccessInfo = null; }
+}
+async function routeStudentAfterLogin(){
+  await checkRestrictedAccess();
+  if(restrictedAccessInfo && localStorage.getItem((COL_PREFIX + 'cbt_login_verified_') + currentUid) !== '1'){
+    showView('accessCodeScreen');
+    return;
+  }
+  showView('studentDashboard');
+  loadStudentDashboard();
+}
+window.submitAccessCode = () => {
+  const val = document.getElementById('accessCodeInput').value.trim();
+  const errEl = document.getElementById('accessCodeError');
+  errEl.classList.add('hidden');
+  if(!restrictedAccessInfo || val !== restrictedAccessInfo.code){
+    errEl.textContent = 'Incorrect code. Please check with your admin.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  localStorage.setItem((COL_PREFIX + 'cbt_login_verified_') + currentUid, '1');
+  showView('studentDashboard');
+  loadStudentDashboard();
+};
+
+/* ======================================================================
+   STUDENT: single "MAIN TEST" auto flow (no test list, no result viewing)
+====================================================================== */
+window.loadStudentDashboard = async () => {
+  const wrap = document.getElementById('mainTestStatusWrap');
+  wrap.innerHTML = '<div class="loader-ring mx-auto mt-10"></div>';
+
+  const setSnap = await getDoc(doc(db, C_SETTINGS, "general"));
+  const mainTestId = setSnap.exists() ? setSnap.data().mainTestId : null;
+
+  if(!mainTestId){
+    wrap.innerHTML = statusCard('fa-hourglass-half', 'No Test Assigned Yet', 'Your admin has not set a main test yet. Please check back later.');
+    return;
+  }
+  const testSnap = await getDoc(doc(db, C_TESTS, mainTestId));
+  if(!testSnap.exists() || testSnap.data().status !== 'published'){
+    wrap.innerHTML = statusCard('fa-hourglass-half', 'No Test Assigned Yet', 'Your admin has not set a main test yet. Please check back later.');
+    return;
+  }
+  const test = testSnap.data();
+  const attemptSnap = await getDoc(doc(db, C_ATTEMPTS, mainTestId + "_" + currentUid));
+  const attempt = attemptSnap.exists() ? attemptSnap.data() : null;
+  const now = new Date();
+  const start = test.testStart ? new Date(test.testStart) : null;
+  const end = test.testEnd ? new Date(test.testEnd) : null;
+  const windowOpen = (!start || now >= start) && (!end || now <= end);
+
+  if(attempt && (attempt.status === 'submitted' || attempt.status === 'auto-submitted')){
+    const submittedStr = attempt.submittedAt && attempt.submittedAt.toDate ? attempt.submittedAt.toDate().toLocaleString() : 'just now';
+    if(isResultReleased(test)){
+      wrap.innerHTML = statusCard('fa-circle-check', 'Test Submitted', `Your test "${esc(test.title)}" was submitted on ${submittedStr}. Your result is out now.`, true, `<div class="flex flex-wrap gap-2 justify-center mt-4"><a href="marksheet.html" target="_blank" class="btn btn-gold text-sm inline-block">View Result</a><a href="answer-key.html" target="_blank" class="btn btn-outline text-sm inline-block">View Answer Key</a></div>`);
+    }else{
+      wrap.innerHTML = statusCard('fa-circle-check', 'Test Submitted', `Your test "${esc(test.title)}" was submitted on ${submittedStr}. Your result will be announced by the institute - please check back later.`, true);
+    }
+  }else if(attempt && attempt.status === 'in-progress'){
+    wrap.innerHTML = statusCard('fa-play', 'Resume Your Test', `You have an ongoing attempt for "${esc(test.title)}".`, false, `<button onclick="resumeTest('${mainTestId}')" class="btn btn-gold text-sm mt-4">Resume Test</button>`);
+  }else if(!windowOpen){
+    const msg = (end && now > end) ? 'The test window has closed.' : `This test will open at ${fmtDateTime(test.testStart)}.`;
+    wrap.innerHTML = statusCard('fa-clock', 'Test Not Available Right Now', msg);
+  }else{
+    wrap.innerHTML = statusCard('fa-file-pen', esc(test.title), `${esc(test.subject||'')} - ${test.durationMinutes} min - ${test.questionCount||0} questions`, false, `<button onclick="startTest('${mainTestId}')" class="btn btn-primary text-sm mt-4">Start Test</button>`);
+  }
+};
+/* A test's result is visible to the student only once the admin has
+   released it - same rule as marksheet.html's gating. */
+function isResultReleased(test){
+  if(!test) return false;
+  if(test.resultOverride === 'hold') return false;
+  if(test.resultOverride === 'release') return true;
+  if(!test.resultReleaseTime) return true;
+  return new Date() >= new Date(test.resultReleaseTime);
+}
+function statusCard(icon, title, desc, success, actionHtml){
+  return `
+  <div class="card p-8 text-center mt-6">
+    <i class="fa-solid ${icon} text-4xl mb-3" style="color:${success?'#16a34a':'var(--brand-maroon)'}"></i>
+    <h3 class="font-bold text-lg mb-1">${title}</h3>
+    <p class="text-sm text-slate-500">${desc}</p>
+    ${actionHtml||''}
+  </div>`;
+}
+
+/* ======================================================================
+   ADMIN: TEST LIST
+====================================================================== */
+window.loadAdminTestList = async () => {
+  const wrap = document.getElementById('adminTestListItems');
+  wrap.innerHTML = '<div class="loader-ring mx-auto"></div>';
+  const qSnap = await getDocs(query(collection(db, C_TESTS), orderBy("createdAt","desc")));
+  const setSnap = await getDoc(doc(db, C_SETTINGS, "general"));
+  const mainTestId = setSnap.exists() ? setSnap.data().mainTestId : null;
+  if(qSnap.empty){ wrap.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No tests yet. Click "New Test" to create one.</p>'; return; }
+  let html = "";
+  qSnap.forEach(d => {
+    const t = d.data();
+    const isMain = d.id === mainTestId;
+    const badgeColor = t.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500';
+    html += `
+    <div class="card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isMain?'border-2':''}" ${isMain?`style="border-color:var(--brand-gold)"`:''}>
+      <div>
+        <div class="font-bold text-sm" style="color:var(--brand-maroon)">${esc(t.title)} <span class="badge ${badgeColor} ml-1">${t.status}</span> ${isMain?'<span class="badge bg-[#fbeee0] text-[var(--brand-maroon)] ml-1"><i class="fa-solid fa-star mr-1"></i>MAIN TEST</span>':''}</div>
+        <div class="text-xs text-slate-500">${esc(t.subject||'')} - ${t.durationMinutes} min - ${t.questionCount||0} questions</div>
+        <div class="text-[11px] text-slate-400 mt-1">Window: ${fmtDateTime(t.testStart)} to ${fmtDateTime(t.testEnd)} - Result: ${fmtDateTime(t.resultReleaseTime)}</div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        ${isMain
+          ? `<button onclick="unsetMainTest()" class="btn btn-outline text-xs">Unset Main Test</button>`
+          : `<button onclick="setMainTest('${d.id}')" class="btn btn-gold text-xs"><i class="fa-solid fa-star mr-1"></i>Set as Main Test</button>`}
+        <button onclick="openTestEditor('${d.id}')" class="btn btn-outline text-xs">Edit / Questions</button>
+        <button onclick="openSubmissions('${d.id}')" class="btn btn-primary text-xs">Submissions</button>
+        <button onclick="deleteTest('${d.id}')" class="btn btn-outline text-xs text-red-500 border-red-300">Delete</button>
+      </div>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+};
+
+window.setMainTest = async (testId) => {
+  await setDoc(doc(db, C_SETTINGS, "general"), { mainTestId: testId }, { merge: true });
+  loadAdminTestList();
+};
+window.unsetMainTest = async () => {
+  if(!confirm("Unset the main test? Students will see 'No Test Assigned' until you set a new one.")) return;
+  await setDoc(doc(db, C_SETTINGS, "general"), { mainTestId: null }, { merge: true });
+  loadAdminTestList();
+};
+
+/* ======================================================================
+   ADMIN: SETTINGS (LOGO)
+====================================================================== */
+let pendingLogo = undefined; // undefined = untouched, null = remove, string = new base64
+
+/* ======================================================================
+   ADMIN: Special Access Codes (restricted students)
+   Doc ID = lowercased email in C_RESTRICTED. First login on a
+   device requires the matching code; once verified (localStorage) that
+   device treats the account as a completely normal student forever after.
+====================================================================== */
+window.openAdminRestrictedAccess = async () => {
+  showView('adminRestrictedAccess');
+  document.getElementById('raEmailInput').value = '';
+  document.getElementById('raCodeInput').value = '';
+  document.getElementById('raError').classList.add('hidden');
+  await loadRestrictedAccessList();
+};
+async function loadRestrictedAccessList(){
+  const wrap = document.getElementById('raList');
+  wrap.innerHTML = '<div class="loader-ring mx-auto"></div>';
+  const snap = await getDocs(collection(db, C_RESTRICTED));
+  if(snap.empty){ wrap.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">No restricted students yet.</p>'; return; }
+  wrap.innerHTML = '';
+  snap.forEach(d => {
+    const data = d.data();
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 text-sm';
+    row.innerHTML = `
+      <div><p class="font-semibold">${esc(data.email)}</p><p class="text-xs text-slate-400">Code: ${esc(data.code)}</p></div>
+      <button class="text-red-600 text-xs font-semibold" onclick="deleteRestrictedAccess('${d.id}')"><i class="fa-solid fa-trash mr-1"></i>Remove</button>`;
+    wrap.appendChild(row);
+  });
+}
+window.addRestrictedAccess = async () => {
+  const email = document.getElementById('raEmailInput').value.trim().toLowerCase();
+  const code = document.getElementById('raCodeInput').value.trim();
+  const errEl = document.getElementById('raError');
+  errEl.classList.add('hidden');
+  if(!email || !code){ errEl.textContent = 'Enter both email and code.'; errEl.classList.remove('hidden'); return; }
+  await setDoc(doc(db, C_RESTRICTED, email), { email, code, createdAt: serverTimestamp() });
+  document.getElementById('raEmailInput').value = '';
+  document.getElementById('raCodeInput').value = '';
+  await loadRestrictedAccessList();
+};
+window.deleteRestrictedAccess = async (id) => {
+  await deleteDoc(doc(db, C_RESTRICTED, id));
+  await loadRestrictedAccessList();
+};
+
+/* ======================================================================
+   ADMIN: Students & 3-digit login codes
+   Registered students = the "users" collection written by the main app.
+   Doc ID = the 3-digit code in C_STUDENTS:
+     { code, name, email, mainUid, uid, createdAt }
+   The Firebase account for a code is created through a throw-away secondary
+   app instance (in-memory auth) so the admin stays logged in. Nothing is
+   written to the main app's "users" collection.
+====================================================================== */
+let studentsCache = [];   // cbt_students docs (codes already given)
+let mainUsers = [];       // students registered in the main app
+let assigningKey = null;
+let stuLoadError = '';
+const STU_RENDER_LIMIT = 100;
+async function withSecondaryAuth(fn){
+  const sec = initializeApp(firebaseConfig, "sec-" + Date.now() + "-" + Math.random().toString(36).slice(2,6));
+  try{
+    const sAuth = initializeAuth(sec, { persistence: inMemoryPersistence });
+    return await fn(sAuth, sec);
+  }finally{
+    try{ await deleteApp(sec); }catch(e){}
+  }
+}
+async function createStudentAccount(code, name){
+  return withSecondaryAuth(async (sAuth) => {
+    let user;
+    try{
+      user = (await createUserWithEmailAndPassword(sAuth, codeEmail(code), codePass(code))).user;
+    }catch(e){
+      // Leftover account from an earlier removal that half-failed: reuse it.
+      if(e.code === 'auth/email-already-in-use'){
+        user = (await signInWithEmailAndPassword(sAuth, codeEmail(code), codePass(code))).user;
+      }else throw e;
+    }
+    try{ await updateProfile(user, { displayName: name }); }catch(e){}
+    const uid = user.uid;
+    try{ await signOut(sAuth); }catch(e){}
+    return uid;
+  });
+}
+async function deleteStudentAccount(code){
+  await withSecondaryAuth(async (sAuth) => {
+    const cred = await signInWithEmailAndPassword(sAuth, codeEmail(code), codePass(code));
+    await deleteUser(cred.user);
+  });
+}
+function studentErr(msg){
+  const el = document.getElementById('stuError');
+  if(!msg){ el.classList.add('hidden'); return; }
+  el.textContent = msg; el.classList.remove('hidden');
+}
+function freeCodes(){
+  const used = new Set(studentsCache.map(s => s.code || s.id));
+  const free = [];
+  for(let i = 0; i < 1000; i++){ const c = String(i).padStart(3,'0'); if(!used.has(c)) free.push(c); }
+  return free;
+}
+function randomFreeCode(){
+  const free = freeCodes();
+  return free.length ? free[Math.floor(Math.random() * free.length)] : '';
+}
+window.openAdminStudents = async () => {
+  showView('adminStudents');
+  ['stuNameInput','stuCodeInput','stuSearch'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('stuFilter').value = 'all';
+  assigningKey = null;
+  studentErr('');
+  await loadStudentList();
+};
+window.loadStudentList = async () => {
+  const wrap = document.getElementById('stuList');
+  wrap.innerHTML = '<div class="loader-ring mx-auto"></div>';
+  stuLoadError = '';
+  const [uRes, sRes] = await Promise.allSettled([
+    getDocs(collection(db, "users")),
+    getDocs(collection(db, C_STUDENTS))
+  ]);
+  if(sRes.status === 'fulfilled'){
+    studentsCache = sRes.value.docs.map(d => ({ id: d.id, ...d.data() }));
+  }else{
+    studentsCache = [];
+    stuLoadError += 'Could not read C_STUDENTS: ' + (sRes.reason && sRes.reason.message || 'permission denied') + '. ';
+  }
+  if(uRes.status === 'fulfilled'){
+    const adminLc = ADMIN_EMAIL.toLowerCase();
+    mainUsers = uRes.value.docs.map(d => {
+      const x = d.data();
+      return { uid: d.id, name: x.name || x.displayName || x.fullName || '', email: (x.email || '').toLowerCase() };
+    }).filter(u => u.email !== adminLc && !isCodeEmail(u.email));
+  }else{
+    mainUsers = [];
+    stuLoadError += 'Could not read the main app\'s "users" collection: ' + (uRes.reason && uRes.reason.message || 'permission denied') + '. Check that Firestore rules let the admin read it.';
+  }
+  studentErr(stuLoadError);
+  renderStudentList();
+};
+window.renderStudentList = () => {
+  const wrap = document.getElementById('stuList');
+  const q = (document.getElementById('stuSearch').value || '').trim().toLowerCase();
+  const filter = document.getElementById('stuFilter').value;
+
+  const byMain = new Map();
+  studentsCache.forEach(st => { if(st.mainUid) byMain.set(st.mainUid, st); });
+  const mainIds = new Set(mainUsers.map(u => u.uid));
+
+  let rows = mainUsers.map(u => ({ key: u.uid, name: u.name || u.email || '(no name)', email: u.email, mainUid: u.uid, st: byMain.get(u.uid) || null }));
+  studentsCache.forEach(st => {
+    if(!st.mainUid || !mainIds.has(st.mainUid)){
+      rows.push({ key: 'code' + (st.code || st.id), name: st.name || '', email: st.email || '', mainUid: null, st, manual: true });
+    }
+  });
+
+  document.getElementById('stuCount').textContent = `${mainUsers.length} registered · ${studentsCache.length} codes given`;
+
+  rows = rows.filter(r => {
+    if(filter === 'free' && r.st) return false;
+    if(filter === 'assigned' && !r.st) return false;
+    if(!q) return true;
+    return (r.name||'').toLowerCase().includes(q) || (r.email||'').includes(q) || (r.st && (r.st.code||r.st.id).includes(q));
+  });
+  rows.sort((a,b) => (a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+
+  if(!rows.length){
+    wrap.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">' + (mainUsers.length || studentsCache.length ? 'No match.' : 'No students found.') + '</p>';
+    return;
+  }
+  const shown = rows.slice(0, STU_RENDER_LIMIT);
+  wrap.innerHTML = '';
+  shown.forEach(r => {
+    const code = r.st ? (r.st.code || r.st.id) : '';
+    const row = document.createElement('div');
+    row.className = 'border border-slate-200 rounded-lg px-3 py-2 text-sm';
+    const badge = code
+      ? `<div class="brand-grad gold-text font-extrabold text-lg rounded-xl flex items-center justify-center shrink-0" style="width:52px;height:46px;letter-spacing:.04em">${esc(code)}</div>`
+      : `<div class="rounded-xl flex items-center justify-center shrink-0 text-slate-300 font-bold" style="width:52px;height:46px;background:#f1e6d0">---</div>`;
+    const action = code
+      ? `<button class="text-red-600 text-xs font-semibold shrink-0" onclick="removeStudent('${esc(code)}')"><i class="fa-solid fa-trash mr-1"></i>Remove</button>`
+      : `<button class="btn btn-outline shrink-0" style="padding:.35rem .8rem;font-size:.75rem" onclick="startAssign('${esc(r.key)}')">Assign code</button>`;
+    let html = `
+      <div class="flex items-center gap-3">
+        ${badge}
+        <div class="flex-1 min-w-0"><p class="font-semibold truncate">${esc(r.name)}${r.manual ? ' <span class="badge bg-slate-100 text-slate-500">manual</span>' : ''}</p><p class="text-xs text-slate-400 truncate">${esc(r.email)}</p></div>
+        ${action}
+      </div>`;
+    if(!code && assigningKey === r.key){
+      html += `
+      <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+        <input id="assignCodeInput" type="text" inputmode="numeric" maxlength="3" class="input text-center font-bold" style="max-width:96px" placeholder="000" autocomplete="off">
+        <button onclick="document.getElementById('assignCodeInput').value = randomFreeCode()" title="Pick a free code" class="btn btn-outline shrink-0" style="padding:.55rem .8rem"><i class="fa-solid fa-dice"></i></button>
+        <button id="assignSaveBtn" onclick="saveAssign('${esc(r.key)}')" class="btn btn-primary text-sm shrink-0" style="padding:.55rem 1rem">Save</button>
+        <button onclick="cancelAssign()" class="text-xs text-slate-500 px-2">Cancel</button>
+      </div>`;
+    }
+    row.innerHTML = html;
+    wrap.appendChild(row);
+  });
+  if(rows.length > shown.length){
+    const more = document.createElement('p');
+    more.className = 'text-[11px] text-slate-400 text-center py-2';
+    more.textContent = `Showing ${shown.length} of ${rows.length}. Use search to narrow down.`;
+    wrap.appendChild(more);
+  }
+  if(assigningKey){
+    const inp = document.getElementById('assignCodeInput');
+    if(inp){
+      if(!inp.value) inp.value = randomFreeCode();
+      inp.oninput = () => { inp.value = inp.value.replace(/\D/g,'').slice(0,3); };
+      inp.onkeydown = e => { if(e.key === 'Enter') window.saveAssign(assigningKey); };
+    }
+  }
+};
+window.startAssign = (key) => { assigningKey = key; studentErr(''); renderStudentList(); const i = document.getElementById('assignCodeInput'); if(i) i.focus(); };
+window.cancelAssign = () => { assigningKey = null; renderStudentList(); };
+window.randomFreeCode = randomFreeCode;
+
+async function giveCode({ code, name, email, mainUid }){
+  const dup = studentsCache.find(s => (s.code||s.id) === code);
+  if(dup) throw new Error(`Code ${code} is already given to ${dup.name}.`);
+  if(mainUid){
+    const has = studentsCache.find(s => s.mainUid === mainUid);
+    if(has) throw new Error(`${name} already has code ${has.code||has.id}.`);
+  }
+  const ex = await getDoc(doc(db, C_STUDENTS, code));
+  if(ex.exists()) throw new Error(`Code ${code} is already given to ${ex.data().name}.`);
+  const uid = await createStudentAccount(code, name);
+  await setDoc(doc(db, C_STUDENTS, code), { code, name, email: email || '', mainUid: mainUid || null, uid, createdAt: serverTimestamp() });
+}
+function explainStudentError(e){
+  return e.code === 'auth/operation-not-allowed' ? 'Email/Password sign-in is disabled in Firebase Authentication. Enable it and try again.'
+       : (e.message || 'Could not save.');
+}
+window.saveAssign = async (key) => {
+  const u = mainUsers.find(x => x.uid === key);
+  const inp = document.getElementById('assignCodeInput');
+  const btn = document.getElementById('assignSaveBtn');
+  if(!u || !inp) return;
+  const code = inp.value.replace(/\D/g,'');
+  studentErr('');
+  if(code.length !== 3){ studentErr('Code must be exactly 3 digits (000-999).'); return; }
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try{
+    await giveCode({ code, name: u.name || u.email, email: u.email, mainUid: u.uid });
+    assigningKey = null;
+    await loadStudentList();
+  }catch(e){
+    studentErr(explainStudentError(e));
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+};
+window.fillRandomStudentCode = () => {
+  const c = randomFreeCode();
+  if(!c){ studentErr('All 1000 codes are in use.'); return; }
+  document.getElementById('stuCodeInput').value = c;
+};
+window.addStudent = async () => {
+  const btn = document.getElementById('stuAddBtn');
+  studentErr('');
+  const name = document.getElementById('stuNameInput').value.trim();
+  const code = document.getElementById('stuCodeInput').value.replace(/\D/g,'');
+  if(!name){ studentErr('Enter the student name.'); return; }
+  if(code.length !== 3){ studentErr('Code must be exactly 3 digits (000-999).'); return; }
+  btn.disabled = true; btn.textContent = 'Adding...';
+  try{
+    await giveCode({ code, name, email: '', mainUid: null });
+    document.getElementById('stuNameInput').value = '';
+    document.getElementById('stuCodeInput').value = '';
+    await loadStudentList();
+  }catch(e){
+    studentErr(explainStudentError(e));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Add';
+  }
+};
+window.removeStudent = async (code) => {
+  const st = studentsCache.find(s => (s.code||s.id) === code);
+  if(!confirm(`Remove code ${code} from ${st ? st.name : 'this student'}? Their code login stops working. Already submitted results stay.`)) return;
+  // NOTE: the Firebase Auth account is intentionally NOT deleted here. Auth is shared by
+  // both portal copies, so deleting it would break the same code in the other portal.
+  // Login is still blocked because the cbt_students doc below is removed.
+  try{ await deleteDoc(doc(db, C_STUDENTS, code)); }catch(e){ alert('Could not remove: ' + (e.message || e)); }
+  await loadStudentList();
+};
+document.getElementById('stuNameInput').addEventListener('keydown', e => { if(e.key === 'Enter') window.addStudent(); });
+document.getElementById('stuCodeInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,3); });
+
+window.openAdminSettings = async () => {
+  showView('adminSettings');
+  pendingLogo = undefined;
+  document.getElementById('logoSaveStatus').textContent = '';
+  const zone = document.getElementById('logoDrop');
+  zone.innerHTML = '<div class="loader-ring" style="width:20px;height:20px;border-width:3px;"></div>';
+  try{
+    const s = await getDoc(doc(db, C_SETTINGS, "general"));
+    const logoUrl = s.exists() ? s.data().logoUrl : null;
+    zone.innerHTML = logoUrl
+      ? `<img draggable="false" src="${logoUrl}">`
+      : '<span class="text-[11px] text-slate-400 text-center px-2"><i class="fa-solid fa-image mr-1"></i>Drop logo here</span>';
+  }catch(e){
+    zone.innerHTML = '<span class="text-[11px] text-slate-400 text-center px-2"><i class="fa-solid fa-image mr-1"></i>Drop logo here</span>';
+  }
+  setupDropzone('logoDrop', 'logoInput', (url) => { pendingLogo = url; });
+};
+
+window.saveLogo = async () => {
+  if(pendingLogo === undefined){ document.getElementById('logoSaveStatus').textContent = 'Choose an image first.'; return; }
+  await setDoc(doc(db, C_SETTINGS, "general"), { logoUrl: pendingLogo }, { merge: true });
+  document.getElementById('logoSaveStatus').textContent = 'Saved!';
+  loadBranding();
+  setTimeout(()=>document.getElementById('logoSaveStatus').textContent='', 2000);
+};
+window.removeLogo = async () => {
+  if(!confirm('Remove the current logo and go back to the default icon?')) return;
+  await setDoc(doc(db, C_SETTINGS, "general"), { logoUrl: null }, { merge: true });
+  pendingLogo = undefined;
+  document.getElementById('logoDrop').innerHTML = '<span class="text-[11px] text-slate-400 text-center px-2"><i class="fa-solid fa-image mr-1"></i>Drop logo here</span>';
+  document.getElementById('logoSaveStatus').textContent = 'Removed.';
+  loadBranding();
+  setTimeout(()=>document.getElementById('logoSaveStatus').textContent='', 2000);
+};
+
+window.deleteTest = async (testId) => {
+  if(!confirm("Delete this test, its sections and all questions? This cannot be undone.")) return;
+  const qSnap = await getDocs(collection(db, C_TESTS, testId, "questions"));
+  for(const q of qSnap.docs) await deleteDoc(q.ref);
+  const sSnap = await getDocs(collection(db, C_TESTS, testId, "sections"));
+  for(const s of sSnap.docs) await deleteDoc(s.ref);
+  await deleteDoc(doc(db, C_TESTS, testId));
+  loadAdminTestList();
+};
+
+/* ======================================================================
+   ADMIN: TEST EDITOR + SECTIONS + QUESTIONS
+====================================================================== */
+let editorTestId = null;
+
+window.openTestEditor = async (testId) => {
+  editorTestId = testId;
+  showView('adminTestEditor');
+  document.getElementById('etSaveStatus').textContent = "";
+  ['etTitle','etSubject','etDuration','etMarks','etNegValue','etStart','etEnd','etResultTime','etInstructions'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('etNegEnabled').checked = false;
+  document.getElementById('etDuration').value = 60;
+  document.getElementById('etMarks').value = 4;
+  document.getElementById('etNegValue').value = 1;
+
+  if(testId){
+    const snap = await getDoc(doc(db, C_TESTS, testId));
+    const t = snap.data();
+    document.getElementById('etTitle').value = t.title || '';
+    document.getElementById('etSubject').value = t.subject || '';
+    document.getElementById('etDuration').value = t.durationMinutes || 60;
+    document.getElementById('etMarks').value = t.marksPerQuestion || 4;
+    document.getElementById('etNegEnabled').checked = !!t.negMarkEnabled;
+    document.getElementById('etNegValue').value = t.negMarkValue ?? 1;
+    document.getElementById('etStart').value = t.testStart ? toLocalInput(t.testStart) : '';
+    document.getElementById('etEnd').value = t.testEnd ? toLocalInput(t.testEnd) : '';
+    document.getElementById('etResultTime').value = t.resultReleaseTime ? toLocalInput(t.resultReleaseTime) : '';
+    document.getElementById('etInstructions').value = t.instructionsText || defaultInstructions(t);
+    document.getElementById('sectionManagerWrap').classList.remove('hidden');
+    document.getElementById('questionManagerWrap').classList.remove('hidden');
+    loadSectionsList();
+  }else{
+    document.getElementById('etInstructions').value = defaultInstructions({ durationMinutes:60, questionCount:0, marksPerQuestion:4, negMarkEnabled:false, negMarkValue:1 });
+    document.getElementById('sectionManagerWrap').classList.add('hidden');
+    document.getElementById('questionManagerWrap').classList.add('hidden');
+  }
+};
+function toLocalInput(iso){
+  const d = new Date(iso);
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,16);
+}
+
+window.saveTest = async (status) => {
+  const payload = {
+    title: document.getElementById('etTitle').value.trim(),
+    subject: document.getElementById('etSubject').value.trim(),
+    durationMinutes: parseInt(document.getElementById('etDuration').value) || 60,
+    marksPerQuestion: parseFloat(document.getElementById('etMarks').value) || 4,
+    negMarkEnabled: document.getElementById('etNegEnabled').checked,
+    negMarkValue: parseFloat(document.getElementById('etNegValue').value) || 0,
+    testStart: toISO(document.getElementById('etStart').value),
+    testEnd: toISO(document.getElementById('etEnd').value),
+    resultReleaseTime: toISO(document.getElementById('etResultTime').value),
+    instructionsText: document.getElementById('etInstructions').value,
+    status
+  };
+  if(!payload.title){ alert("Please enter a test title."); return; }
+
+  if(editorTestId){
+    await updateDoc(doc(db, C_TESTS, editorTestId), payload);
+  }else{
+    payload.createdAt = serverTimestamp();
+    payload.questionCount = 0;
+    payload.resultOverride = null;
+    const ref = await addDoc(collection(db, C_TESTS), payload);
+    editorTestId = ref.id;
+    document.getElementById('sectionManagerWrap').classList.remove('hidden');
+    document.getElementById('questionManagerWrap').classList.remove('hidden');
+    loadSectionsList();
+  }
+  document.getElementById('etSaveStatus').textContent = "Saved";
+  setTimeout(()=>document.getElementById('etSaveStatus').textContent='', 2000);
+};
+
+/* ---- sections ---- */
+window.addSection = async () => {
+  const name = document.getElementById('secName').value.trim();
+  if(!name){ alert("Enter a section name."); return; }
+  const existing = await getDocs(collection(db, C_TESTS, editorTestId, "sections"));
+  await addDoc(collection(db, C_TESTS, editorTestId, "sections"), { name, order: existing.size });
+  document.getElementById('secName').value = '';
+  loadSectionsList();
+};
+window.deleteSection = async (secId) => {
+  if(!confirm("Delete this section and all its questions?")) return;
+  const qSnap = await getDocs(query(collection(db, C_TESTS, editorTestId, "questions"), where("sectionId","==",secId)));
+  for(const q of qSnap.docs) await deleteDoc(q.ref);
+  await deleteDoc(doc(db, C_TESTS, editorTestId, "sections", secId));
+  loadSectionsList();
+};
+window.loadSectionsList = async () => {
+  const snap = await getDocs(query(collection(db, C_TESTS, editorTestId, "sections"), orderBy("order")));
+  let html = "";
+  const sel = document.getElementById('qSection');
+  sel.innerHTML = "";
+  snap.forEach(d => {
+    const s = d.data();
+    html += `<div class="badge bg-[#fbeee0] text-[var(--brand-maroon)] flex items-center gap-2">${esc(s.name)} <button onclick="deleteSection('${d.id}')" class="text-red-500"><i class="fa-solid fa-xmark"></i></button></div>`;
+    sel.innerHTML += `<option value="${d.id}">${esc(s.name)}</option>`;
+  });
+  document.getElementById('sectionsListWrap').innerHTML = html || '<p class="text-xs text-slate-400">No sections yet. Add one above before adding questions.</p>';
+  loadQuestionsList();
+  setupQuestionDropzones();
+};
+
+/* ---- questions ---- */
+let pendingQImage = null;
+let pendingOptImages = [null,null,null,null];
+function setupQuestionDropzones(){
+  if(editingQuestionId) resetQuestionForm();
+  setupDropzone('qImageDrop','qImageInput', (url)=>{ pendingQImage = url; });
+  for(let i=0;i<4;i++){
+    setupDropzone(`qOptImgDrop${i}`, `qOptImgInput${i}`, (url)=>{ pendingOptImages[i] = url; });
+  }
+}
+
+
+/* ---------------- EDIT EXISTING QUESTION ---------------- */
+let editingQuestionId = null;
+let editingQuestionOrig = null;   // { sectionId, qNo } before editing
+let qEditCache = {};              // filled by loadQuestionsList()
+const Q_DROP_PLACEHOLDER = '<span class="text-[11px] text-slate-400"><i class="fa-solid fa-image mr-1"></i>Drop image here</span>';
+const OPT_DROP_PLACEHOLDER = '<span class="text-[10px] text-slate-400">Image (optional)</span>';
+
+function showDropPreview(zoneId, url, placeholder, onChange){
+  const zone = document.getElementById(zoneId);
+  if(!zone) return;
+  if(!url){ zone.innerHTML = placeholder; return; }
+  zone.innerHTML = `<img draggable="false" src="${url}"><button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none">&times;</button>`;
+  zone.querySelector('button').onclick = (ev) => {
+    ev.stopPropagation();
+    zone.innerHTML = placeholder;
+    onChange(null);
+  };
+}
+
+function resetQuestionForm(){
+  editingQuestionId = null; editingQuestionOrig = null;
+  ['qText','qOpt0','qOpt1','qOpt2','qOpt3'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('qCorrect').value = '0';
+  pendingQImage = null; pendingOptImages = [null,null,null,null];
+  document.getElementById('qImageDrop').innerHTML = Q_DROP_PLACEHOLDER;
+  for(let i=0;i<4;i++) document.getElementById(`qOptImgDrop${i}`).innerHTML = OPT_DROP_PLACEHOLDER;
+  document.getElementById('qSubmitBtn').textContent = 'Add Question';
+  document.getElementById('qCancelEditBtn').classList.add('hidden');
+  document.getElementById('qEditBanner').classList.add('hidden');
+}
+
+window.editQuestion = (qId) => {
+  const q = qEditCache[qId];
+  if(!q){ alert('Question not found, refresh the list.'); return; }
+  editingQuestionId = qId;
+  editingQuestionOrig = { sectionId: q.sectionId, qNo: q.qNo };
+  document.getElementById('qSection').value = q.sectionId;
+  document.getElementById('qText').value = q.text || '';
+  for(let i=0;i<4;i++) document.getElementById('qOpt'+i).value = (q.options && q.options[i]) || '';
+  document.getElementById('qCorrect').value = String(q.correctIndex || 0);
+  pendingQImage = q.imageUrl || null;
+  pendingOptImages = [0,1,2,3].map(i => (q.optionImages && q.optionImages[i]) || null);
+  showDropPreview('qImageDrop', pendingQImage, Q_DROP_PLACEHOLDER, (u)=>{ pendingQImage = u; });
+  for(let i=0;i<4;i++) showDropPreview(`qOptImgDrop${i}`, pendingOptImages[i], OPT_DROP_PLACEHOLDER, (u)=>{ pendingOptImages[i] = u; });
+  document.getElementById('qSubmitBtn').textContent = 'Save Changes';
+  document.getElementById('qCancelEditBtn').classList.remove('hidden');
+  const banner = document.getElementById('qEditBanner');
+  banner.textContent = `Editing Q${q.qNo} - change anything below, then press "Save Changes".`;
+  banner.classList.remove('hidden');
+  banner.scrollIntoView({ behavior:'smooth', block:'center' });
+  document.getElementById('qText').focus();
+};
+
+window.cancelEditQuestion = () => { resetQuestionForm(); };
+
+async function saveEditedQuestion(sectionId, text, options, correctIndex){
+  const ref = doc(db, C_TESTS, editorTestId, "questions", editingQuestionId);
+  const data = { text, options, correctIndex, imageUrl: pendingQImage || null, optionImages: [...pendingOptImages] };
+  const oldSectionId = editingQuestionOrig.sectionId;
+  if(sectionId === oldSectionId){
+    await updateDoc(ref, data);
+    return;
+  }
+  // moved to another section: put it at the end there, then close the gap in the old section
+  const newSnap = await getDocs(query(collection(db, C_TESTS, editorTestId, "questions"), where("sectionId","==",sectionId)));
+  await updateDoc(ref, { ...data, sectionId, qNo: newSnap.size + 1 });
+  const oldSnap = await getDocs(query(collection(db, C_TESTS, editorTestId, "questions"), where("sectionId","==",oldSectionId)));
+  const docs = oldSnap.docs.sort((a,b)=>a.data().qNo-b.data().qNo);
+  let i = 1;
+  for(const d of docs){ if(d.data().qNo !== i) await updateDoc(d.ref, { qNo: i }); i++; }
+}
+
+/* ---------------- MATH SYMBOL TOOLBOX (question editor) ----------------
+   Question/option fields are now multi-line textareas and accept any Unicode,
+   so every symbol below (and any other you paste/type) is stored and shown
+   to students as-is. Clicking a symbol inserts it at the cursor of the field
+   you last clicked in (question, option A-D, or test instructions). */
+const MATH_TARGET_IDS = ['qText','qOpt0','qOpt1','qOpt2','qOpt3','etInstructions'];
+const MATH_TARGET_LABELS = { qText:'Question', qOpt0:'Option A', qOpt1:'Option B', qOpt2:'Option C', qOpt3:'Option D', etInstructions:'Instructions' };
+const MATH_GROUPS = [
+  ['Basic',      '± ∓ × ÷ · ∗ ∘ ≠ ≈ ≅ ≡ ∼ ≃ ∝ < > ≤ ≥ ≪ ≫ ∞ % ‰ ° ′ ″ ‴ ‖ ⌊ ⌋ ⌈ ⌉ ⟨ ⟩ ( ) [ ] { }'],
+  ['x² x₂',      '⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁼ ⁽ ⁾ ⁿ ⁱ ˣ ʸ ᵃ ᵇ ᶜ ᵈ ᵉ ᶠ ᵍ ʰ ʲ ᵏ ˡ ᵐ ᵒ ᵖ ʳ ˢ ᵗ ᵘ ᵛ ʷ ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₌ ₍ ₎ ₐ ₑ ₒ ₓ ₕ ₖ ₗ ₘ ₙ ₚ ₛ ₜ ᵢ ⱼ ᵣ ᵤ ᵥ'],
+  ['Roots & fractions', '√ ∛ ∜ ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅚ ⅛ ⅜ ⅝ ⅞ ⁄ ∕ ‰ ℅'],
+  ['Greek',      'α β γ δ ε ζ η θ ϑ ι κ λ μ ν ξ ο π ϖ ρ σ ς τ υ φ ϕ χ ψ ω Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω'],
+  ['Calculus',   '∫ ∬ ∭ ∮ ∯ ∑ ∏ ∐ ∂ ∇ ∆ ∞ ′ ″ ⁻¹ → ↦ ⟶ lim sin cos tan log ln'],
+  ['Sets & logic','∈ ∉ ∋ ⊂ ⊃ ⊄ ⊆ ⊇ ∪ ∩ ∅ ∖ ∀ ∃ ∄ ∴ ∵ ¬ ∧ ∨ ⊕ ⊗ ⊥ ⊤ ℕ ℤ ℚ ℝ ℂ ℙ ℵ ⇒ ⇐ ⇔ ⟹ ⟸ ⟺ ∣ ∤'],
+  ['Arrows',     '→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ⇌ ⇄ ⇆ ⟶ ⟵ ⟷ ↦ ↩ ↪ ↺ ↻'],
+  ['Geometry',   '∠ ∡ ∢ ⊥ ∥ ∦ △ ▽ □ ▭ ◇ ○ ● ◯ ⌒ ≅ ∼ ≈ ° ′ ″ ⟂ ⌀ ∟ ⊾ ▱'],
+  ['Physics & chem','ℏ ℓ Å Ω µ ° ℃ ℉ ∝ ⊙ ⊕ ⊗ ∥ ⊥ ± · × ⇌ → ↑ ↓ ⁺ ⁻ ² ³ ₂ ₃ ₄ ⁰ ‰ ℮ ∅ ✕ ⚛ ☉ ⊛'],
+  ['Vector / bar (after a letter)', '◌⃗|\u20D7 ◌̄|\u0304 ◌̂|\u0302 ◌̃|\u0303 ◌̇|\u0307 ◌̈|\u0308 ◌̅|\u0305 ◌̲|\u0332 ◌⃡|\u20E1 ◌̊|\u030A'],
+];
+let mathTarget = 'qText';
+let mathGroupIdx = 0;
+function mathUpdateIndicator(){
+  const el = document.getElementById('mathTargetLabel');
+  if(el) el.textContent = MATH_TARGET_LABELS[mathTarget] || 'Question';
+}
+function renderMathToolbox(){
+  const box = document.getElementById('mathToolbox');
+  if(!box) return;
+  const tabs = MATH_GROUPS.map((g,i)=>`<button type="button" onmousedown="event.preventDefault()" onclick="mathPickGroup(${i})" class="sec-tab ${i===mathGroupIdx?'active':''}" style="${i===mathGroupIdx?'background:var(--brand-maroon);color:#fff;border-color:var(--brand-maroon)':''}">${g[0]}</button>`).join('');
+  const syms = MATH_GROUPS[mathGroupIdx][1].split(' ').filter(Boolean).map(tok=>{
+    const parts = tok.split('|');
+    const shown = parts[0];
+    const ins = parts[1] || parts[0];
+    return `<button type="button" onmousedown="event.preventDefault()" onclick="insertMathSymbol(this.dataset.s)" data-s="${ins}" class="mathsym">${shown}</button>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="p-3 rounded-xl border-2 border-[#ecdcb9] bg-[#fffdf8]">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold" style="color:var(--brand-maroon)"><i class="fa-solid fa-square-root-variable mr-1"></i>Math symbols</span>
+        <span class="text-[11px] text-slate-500">Inserting into: <b id="mathTargetLabel">${MATH_TARGET_LABELS[mathTarget]}</b></span>
+      </div>
+      <div class="flex flex-wrap gap-1 mb-2">${tabs}</div>
+      <div class="flex flex-wrap gap-1">${syms}</div>
+      <p class="text-[10px] text-slate-400 mt-2">Click inside the question or an option first, then click a symbol. Press Enter for a new line. You can also paste any symbol or type it with your keyboard.</p>
+    </div>`;
+}
+window.mathPickGroup = (i) => { mathGroupIdx = i; renderMathToolbox(); };
+window.insertMathSymbol = (sym) => {
+  const el = document.getElementById(mathTarget) || document.getElementById('qText');
+  if(!el) return;
+  el.focus();
+  const start = (typeof el.selectionStart === 'number') ? el.selectionStart : el.value.length;
+  const end = (typeof el.selectionEnd === 'number') ? el.selectionEnd : start;
+  el.setRangeText(sym, start, end, 'end');
+  el.dispatchEvent(new Event('input', { bubbles:true }));
+};
+document.addEventListener('focusin', (e) => {
+  if(e.target && MATH_TARGET_IDS.includes(e.target.id)){ mathTarget = e.target.id; mathUpdateIndicator(); }
+});
+renderMathToolbox();
+
+window.toggleBulkAdd = () => document.getElementById('bulkAddBox').classList.toggle('hidden');
+
+window.addQuestion = async () => {
+  const sectionId = document.getElementById('qSection').value;
+  if(!sectionId){ alert("Add a section first."); return; }
+  const text = document.getElementById('qText').value.trim();
+  const options = [0,1,2,3].map(i => document.getElementById('qOpt'+i).value.trim());
+  const correctIndex = parseInt(document.getElementById('qCorrect').value);
+  if(!text || options.some(o=>!o)){ alert("Fill in the question text and all 4 options."); return; }
+  if(editingQuestionId){
+    await saveEditedQuestion(sectionId, text, options, correctIndex);
+  }else{
+    await addQuestionToDb(sectionId, text, options, correctIndex, pendingQImage, [...pendingOptImages]);
+  }
+  resetQuestionForm();
+  loadQuestionsList();
+};
+
+/* ---- BULK ADD (paste JSON or upload a .json file) ---- */
+function parseBulkQuestions(raw){
+  let t = String(raw || '').replace(/^\uFEFF/, '').trim();
+  // WhatsApp / Word often turn quotes into "smart quotes" - make them normal again
+  t = t.replace(/[\u201C\u201D\u201E\u201F]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  // ```json fences and trailing commas
+  t = t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').replace(/,\s*([\]}])/g, '$1');
+  let data;
+  try{ data = JSON.parse(t); }
+  catch(e){ return { items:[], errors:['Invalid JSON: ' + e.message] }; }
+  if(data && !Array.isArray(data) && Array.isArray(data.questions)) data = data.questions;
+  if(!Array.isArray(data)) return { items:[], errors:['JSON must be an array of questions: [ {...}, {...} ]'] };
+  const items = [], errors = [];
+  data.forEach((q, i) => {
+    const n = i + 1;
+    const text = (q && (q.text ?? q.question)) ;
+    const opts = q && q.options;
+    let ci = q && (q.correctIndex ?? q.correct);
+    if(typeof ci === 'string' && /^[A-Da-d]$/.test(ci.trim())) ci = 'abcd'.indexOf(ci.trim().toLowerCase());
+    else if(typeof ci === 'string' && ci.trim() !== '' && !isNaN(ci)) ci = Number(ci);
+    if(typeof text !== 'string' || !text.trim()){ errors.push(`#${n}: question text missing`); return; }
+    if(!Array.isArray(opts) || opts.length !== 4 || opts.some(o => String(o).trim() === '')){ errors.push(`#${n}: needs exactly 4 non-empty options`); return; }
+    if(!Number.isInteger(ci) || ci < 0 || ci > 3){ errors.push(`#${n}: correctIndex must be 0, 1, 2 or 3`); return; }
+    items.push({ text: text.trim(), options: opts.map(o => String(o).trim()), correctIndex: ci });
+  });
+  return { items, errors };
+}
+
+function bulkStatus(msg, isError){
+  const el = document.getElementById('bulkStatus');
+  if(!el) return;
+  el.textContent = msg || '';
+  el.className = 'text-xs mt-2 ' + (isError ? 'text-red-600 font-semibold' : 'text-slate-600');
+}
+
+window.bulkFileChosen = async (input) => {
+  const file = input.files && input.files[0];
+  if(!file) return;
+  try{
+    const txt = await file.text();
+    document.getElementById('bulkJson').value = txt;
+    const { items, errors } = parseBulkQuestions(txt);
+    if(errors.length && !items.length) bulkStatus(`"${file.name}" could not be read: ${errors[0]}`, true);
+    else bulkStatus(`"${file.name}" loaded: ${items.length} valid question(s)${errors.length ? `, ${errors.length} skipped (${errors.slice(0,3).join('; ')}${errors.length>3?'...':''})` : ''}. Now press "Add All to Selected Section".`);
+  }catch(e){ bulkStatus('Could not read the file: ' + e.message, true); }
+  input.value = '';
+};
+
+window.bulkAddQuestions = async () => {
+  const sectionId = document.getElementById('qSection').value;
+  if(!sectionId){ alert("Add / select a section first."); return; }
+  const { items, errors } = parseBulkQuestions(document.getElementById('bulkJson').value);
+  if(!items.length){ bulkStatus(errors[0] || 'Nothing to add - paste JSON or upload a file first.', true); return; }
+  if(errors.length && !confirm(`${errors.length} question(s) are invalid and will be skipped:\n\n${errors.slice(0,8).join('\n')}\n\nAdd the other ${items.length}?`)) return;
+  const btn = document.getElementById('bulkAddBtn');
+  btn.disabled = true;
+  try{
+    bulkStatus('Adding questions...');
+    const qCol = collection(db, C_TESTS, editorTestId, "questions");
+    const existing = await getDocs(query(qCol, where("sectionId","==",sectionId)));
+    let qNo = existing.size;
+    for(let start = 0; start < items.length; start += 200){
+      const batch = writeBatch(db);
+      items.slice(start, start + 200).forEach(q => {
+        qNo++;
+        batch.set(doc(qCol), { sectionId, qNo, text: q.text, options: q.options, correctIndex: q.correctIndex, imageUrl: null, optionImages: [null,null,null,null] });
+      });
+      await batch.commit();
+      bulkStatus(`Added ${Math.min(start + 200, items.length)} of ${items.length}...`);
+    }
+    const allSnap = await getDocs(qCol);
+    await updateDoc(doc(db, C_TESTS, editorTestId), { questionCount: allSnap.size });
+    document.getElementById('bulkJson').value = '';
+    bulkStatus(`Done - ${items.length} question(s) added.${errors.length ? ` ${errors.length} skipped.` : ''}`);
+    loadQuestionsList();
+  }catch(e){
+    console.error(e);
+    bulkStatus('Failed: ' + (e && e.message ? e.message : e) + (/permission/i.test(String(e && e.message)) ? '  -> Firestore Rules do not allow this collection yet (add rules for ' + C_TESTS + ').' : ''), true);
+  }finally{
+    btn.disabled = false;
+  }
+};
+
+async function addQuestionToDb(sectionId, text, options, correctIndex, imageUrl, optionImages){
+  const existingSnap = await getDocs(query(collection(db, C_TESTS, editorTestId, "questions"), where("sectionId","==",sectionId)));
+  const qNo = existingSnap.size + 1;
+  await addDoc(collection(db, C_TESTS, editorTestId, "questions"), { sectionId, qNo, text, options, correctIndex, imageUrl: imageUrl||null, optionImages: optionImages||[null,null,null,null] });
+  const allSnap = await getDocs(collection(db, C_TESTS, editorTestId, "questions"));
+  await updateDoc(doc(db, C_TESTS, editorTestId), { questionCount: allSnap.size });
+}
+
+window.loadQuestionsList = async () => {
+  const secSnap = await getDocs(query(collection(db, C_TESTS, editorTestId, "sections"), orderBy("order")));
+  const sections = secSnap.docs.map(d=>({id:d.id, ...d.data()}));
+  const qSnap = await getDocs(collection(db, C_TESTS, editorTestId, "questions"));
+  const questions = qSnap.docs.map(d=>({id:d.id, ...d.data()}));
+  document.getElementById('qCount').textContent = questions.length;
+  qEditCache = {}; questions.forEach(q => { qEditCache[q.id] = q; });
+
+  let html = "";
+  for(const sec of sections){
+    const secQs = questions.filter(q=>q.sectionId===sec.id).sort((a,b)=>a.qNo-b.qNo);
+    html += `<div><div class="text-xs font-bold gold-text uppercase tracking-wide mb-2">${esc(sec.name)} (${secQs.length})</div>`;
+    if(secQs.length===0) html += `<p class="text-slate-400 text-xs mb-3">No questions in this section yet.</p>`;
+    secQs.forEach(q => {
+      const thumb = q.imageUrl ? `<img draggable="false" src="${q.imageUrl}" class="w-12 h-12 object-cover rounded-lg mr-2">` : '';
+      html += `
+      <div class="flex items-start justify-between gap-3 p-3 bg-[#fbf6ea] rounded-xl mb-2">
+        <div class="flex items-start text-xs">
+          ${thumb}
+          <div>
+            <span class="font-bold">Q${q.qNo}.</span> ${escm(q.text)}
+            <div class="text-slate-400 mt-1">${q.options.map((o,i)=>`${String.fromCharCode(65+i)}) ${escm(o)}${(q.optionImages&&q.optionImages[i])?' [img]':''}`).join('  ')}</div>
+            <div class="text-emerald-600 mt-1">Correct: ${String.fromCharCode(65+q.correctIndex)}</div>
+          </div>
+        </div>
+        <div class="flex gap-3 shrink-0">
+          <button onclick="editQuestion('${q.id}')" class="text-blue-500 hover:text-blue-700 text-xs" title="Edit"><i class="fa-solid fa-pen"></i></button>
+          <button onclick="deleteQuestion('${q.id}','${sec.id}')" class="text-red-400 hover:text-red-600 text-xs" title="Delete"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  document.getElementById('questionsListWrap').innerHTML = html || '<p class="text-slate-400 text-xs">Add a section, then add questions.</p>';
+};
+
+window.deleteQuestion = async (qId, sectionId) => {
+  if(editingQuestionId === qId) resetQuestionForm();
+  await deleteDoc(doc(db, C_TESTS, editorTestId, "questions", qId));
+  const secSnap = await getDocs(query(collection(db, C_TESTS, editorTestId, "questions"), where("sectionId","==",sectionId)));
+  const docs = secSnap.docs.sort((a,b)=>a.data().qNo-b.data().qNo);
+  let i=1;
+  for(const d of docs){ await updateDoc(d.ref, { qNo: i }); i++; }
+  const allSnap = await getDocs(collection(db, C_TESTS, editorTestId, "questions"));
+  await updateDoc(doc(db, C_TESTS, editorTestId), { questionCount: allSnap.size });
+  loadQuestionsList();
+};
+
+/* ======================================================================
+   ADMIN: SUBMISSIONS
+====================================================================== */
+let subsTestId = null, subsTestData = null, subsQuestions = [], subsSections = [];
+
+window.openSubmissions = async (testId) => {
+  subsTestId = testId;
+  showView('adminSubmissions');
+  const snap = await getDoc(doc(db, C_TESTS, testId));
+  subsTestData = snap.data();
+  const secSnap = await getDocs(query(collection(db, C_TESTS, testId, "sections"), orderBy("order")));
+  subsSections = secSnap.docs.map(d=>({id:d.id, ...d.data()}));
+  const secOrderMap = {}; subsSections.forEach((s,i)=>secOrderMap[s.id]=i);
+  const qSnap = await getDocs(collection(db, C_TESTS, testId, "questions"));
+  subsQuestions = qSnap.docs.map(d=>({id:d.id, ...d.data()}))
+    .sort((a,b)=> (secOrderMap[a.sectionId]??99) - (secOrderMap[b.sectionId]??99) || (a.qNo-b.qNo));
+
+  document.getElementById('subResultTime').textContent = fmtDateTime(subsTestData.resultReleaseTime);
+  updateResultStatusLabel();
+
+  const attemptsSnap = await getDocs(query(collection(db, C_ATTEMPTS), where("testId","==",testId)));
+  document.getElementById('subCount').textContent = attemptsSnap.size;
+  let rows = "";
+  attemptsSnap.forEach(d => {
+    const a = d.data();
+    const started = a.startedAt && a.startedAt.toDate ? a.startedAt.toDate().toLocaleString() : '-';
+    const submitted = a.submittedAt && a.submittedAt.toDate ? a.submittedAt.toDate().toLocaleString() : '-';
+    rows += `
+    <tr class="border-b border-[#f1e6d0]">
+      <td class="py-2 pr-3">${esc(a.name||'')}</td>
+      <td class="py-2 pr-3">${esc(prettyEmail(a.email))}</td>
+      <td class="py-2 pr-3">${started}</td>
+      <td class="py-2 pr-3">${submitted}</td>
+      <td class="py-2 pr-3"><span class="badge ${a.status==='submitted'?'bg-emerald-100 text-emerald-700':a.status==='auto-submitted'?'bg-amber-100 text-amber-700':'bg-slate-100 text-slate-500'}">${a.status}</span></td>
+      <td class="py-2 pr-3">${a.violationCount||0}</td>
+      <td class="py-2 pr-3">${a.score!==null && a.score!==undefined ? a.score+'/'+a.totalMarks : '-'}</td>
+      <td class="py-2"><button onclick='openAnswerSheet(${JSON.stringify(d.id)})' class="text-xs" style="color:var(--brand-maroon)">View Sheet</button></td>
+      <td class="py-2"><button onclick='openProctorPhotos(${JSON.stringify(d.id)})' class="text-xs"><i class="fa-solid fa-camera mr-1"></i>Photos</button></td>
+    </tr>`;
+  });
+  document.getElementById('subTableBody').innerHTML = rows || `<tr><td colspan="9" class="text-center text-slate-400 py-8">No submissions yet.</td></tr>`;
+};
+
+function updateResultStatusLabel(){
+  const ov = subsTestData.resultOverride;
+  const label = ov === 'release' ? 'Force-released by admin' : ov === 'hold' ? 'Held by admin' : 'Following schedule';
+  document.getElementById('subResultStatus').textContent = label;
+}
+window.setResultOverride = async (val) => {
+  await updateDoc(doc(db, C_TESTS, subsTestId), { resultOverride: val });
+  subsTestData.resultOverride = val;
+  updateResultStatusLabel();
+};
+
+window.openAnswerSheet = async (attemptDocId) => {
+  const snap = await getDoc(doc(db, C_ATTEMPTS, attemptDocId));
+  const a = snap.data();
+  const qTimes = a.questionTimes || {};
+  const defaultMarks = subsTestData.marksPerQuestion || 4;
+  const neg = subsTestData.negMarkEnabled ? (subsTestData.negMarkValue || 0) : 0;
+
+  /* Use stored section-wise results if present, else compute them
+     on the fly (covers attempts submitted before this feature existed). */
+  let sectionResults = a.sectionResults;
+  if(!sectionResults || !sectionResults.length){
+    const map = {};
+    subsSections.forEach(s => { map[s.id] = { sectionId:s.id, name:s.name, correct:0, wrong:0, unattempted:0, marks:0, maxMarks:0 }; });
+    subsQuestions.forEach(q => {
+      const m = map[q.sectionId] || (map[q.sectionId] = { sectionId:q.sectionId, name:'General', correct:0, wrong:0, unattempted:0, marks:0, maxMarks:0 });
+      m.maxMarks += defaultMarks;
+      const chosen = a.answers ? a.answers[q.id] : undefined;
+      if(chosen===undefined){ m.unattempted++; }
+      else if(chosen===q.correctIndex){ m.correct++; m.marks += defaultMarks; }
+      else{ m.wrong++; m.marks -= neg; }
+    });
+    sectionResults = Object.values(map);
+  }
+
+  let html = `<div class="text-xs text-slate-500 mb-3"><b>${esc(a.name)}</b> (${esc(prettyEmail(a.email))})</div>`;
+
+  html += `
+  <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-center">
+    <div class="bg-[#fbf6ea] rounded-lg p-2"><div class="text-[10px] text-slate-400">Total Score</div><div class="font-bold text-sm" style="color:var(--brand-maroon)">${a.score ?? '-'}/${a.totalMarks ?? '-'}</div></div>
+    <div class="bg-emerald-50 rounded-lg p-2"><div class="text-[10px] text-slate-400">Correct</div><div class="font-bold text-sm text-emerald-600">${a.correctCount ?? '-'}</div></div>
+    <div class="bg-red-50 rounded-lg p-2"><div class="text-[10px] text-slate-400">Wrong</div><div class="font-bold text-sm text-red-500">${a.wrongCount ?? '-'}</div></div>
+    <div class="bg-slate-50 rounded-lg p-2"><div class="text-[10px] text-slate-400">Unattempted</div><div class="font-bold text-sm text-slate-500">${a.unattemptedCount ?? '-'}</div></div>
+    <div class="bg-[#fbeee0] rounded-lg p-2"><div class="text-[10px] text-slate-400">Violations</div><div class="font-bold text-sm" style="color:var(--brand-maroon)">${a.violationCount||0}</div></div>
+  </div>`;
+
+  if(sectionResults.length){
+    html += `<div class="mb-4">
+      <div class="text-xs font-bold gold-text uppercase tracking-wide mb-2">Section-wise Result</div>
+      <div class="overflow-x-auto"><table class="w-full text-xs">
+        <thead><tr class="text-left text-slate-400 border-b border-[#f1e6d0]">
+          <th class="py-1 pr-3">Section</th><th class="py-1 pr-3">Correct</th><th class="py-1 pr-3">Wrong</th><th class="py-1 pr-3">Unattempted</th><th class="py-1">Marks</th>
+        </tr></thead>
+        <tbody>${sectionResults.map(sr => `
+          <tr class="border-b border-[#f7f0e2]">
+            <td class="py-1 pr-3 font-semibold">${esc(sr.name)}</td>
+            <td class="py-1 pr-3">${sr.correct}</td>
+            <td class="py-1 pr-3">${sr.wrong}</td>
+            <td class="py-1 pr-3">${sr.unattempted}</td>
+            <td class="py-1 font-semibold" style="color:var(--brand-maroon)">${sr.marks}/${sr.maxMarks}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }
+
+  let lastSec = null;
+  subsQuestions.forEach(q => {
+    if(q.sectionId !== lastSec){
+      lastSec = q.sectionId;
+      const sec = subsSections.find(s=>s.id===lastSec);
+      html += `<div class="text-xs font-bold gold-text uppercase tracking-wide mt-3 mb-1">${sec?esc(sec.name):'General'}</div>`;
+    }
+    const chosen = a.answers ? a.answers[q.id] : undefined;
+    const isCorrect = chosen === q.correctIndex;
+    const chosenLabel = chosen===undefined ? 'Not attempted' : String.fromCharCode(65+chosen)+') '+escm(q.options[chosen]);
+    const qImg = q.imageUrl ? `<img draggable="false" src="${q.imageUrl}" class="max-w-[160px] rounded-lg my-1">` : '';
+    html += `
+    <div class="p-3 rounded-xl mb-2 ${chosen===undefined?'bg-slate-50':isCorrect?'bg-emerald-50':'bg-red-50'}">
+      <div class="font-semibold text-xs mb-1">Q${q.qNo}. ${escm(q.text)}</div>
+      ${qImg}
+      <div class="text-xs">Student answer: <b>${chosenLabel}</b></div>
+      <div class="text-xs">Correct answer: <b>${String.fromCharCode(65+q.correctIndex)}) ${escm(q.options[q.correctIndex])}</b></div>
+      <div class="text-[11px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>Time spent: ${fmtSecs(qTimes[q.id])}</div>
+    </div>`;
+  });
+  document.getElementById('answerSheetBody').innerHTML = html;
+  document.getElementById('answerSheetModal').classList.remove('hidden');
+};
+window.closeAnswerSheet = () => document.getElementById('answerSheetModal').classList.add('hidden');
+
+window.openProctorPhotos = async (attemptDocId) => {
+  const body = document.getElementById('proctorPhotosBody');
+  body.innerHTML = `<p class="text-slate-400 text-xs col-span-full text-center py-8"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading photos...</p>`;
+  document.getElementById('proctorPhotosModal').classList.remove('hidden');
+  try{
+    // Photos live in a subcollection (see flushPhotoBatch) so a long test
+    // with frequent captures never risks the attempt doc's 1MB size limit.
+    // Each subcollection doc is now a BATCH of up to PROCTOR_BATCH_SIZE
+    // photos (doc.photos = [...]) instead of one doc per photo, so we
+    // flatten those out here. Docs written before batching was added are
+    // still single-photo docs (no `photos` array) - handled as a fallback
+    // so old attempts keep displaying correctly.
+    // No orderBy here on purpose: batch docs use `batchCapturedAt` while
+    // any older, pre-batching docs use `capturedAt` - mixing the two would
+    // make Firestore silently drop whichever docs lack that field. We sort
+    // client-side below instead, after flattening, so both kinds work.
+    const subSnap = await getDocs(collection(db, C_ATTEMPTS, attemptDocId, "proctorPhotos"));
+    let photos = subSnap.docs.flatMap(d => {
+      const data = d.data();
+      return Array.isArray(data.photos) ? data.photos : [data];
+    }).sort((a,b) => (a.capturedAt||0) - (b.capturedAt||0));
+    if(!photos.length){
+      const snap = await getDoc(doc(db, C_ATTEMPTS, attemptDocId));
+      const a = snap.data();
+      photos = (a && a.proctorPhotos) || [];
+    }
+    if(!photos.length){
+      body.innerHTML = `<p class="text-slate-400 text-xs col-span-full text-center py-8">No proctoring photos captured for this attempt.</p>`;
+    }else{
+      body.innerHTML = photos.map(p => `
+        <div class="rounded-lg overflow-hidden border border-[#f1e6d0]">
+          <div class="w-full h-28 flex items-center justify-center bg-slate-900">
+            <img draggable="false" src="${p.url}" class="max-w-full max-h-full object-contain">
+          </div>
+          <div class="text-[10px] text-slate-500 px-1.5 py-1">${new Date(p.time).toLocaleTimeString()}</div>
+        </div>`).join('');
+    }
+  }catch(e){
+    // Surfaced instead of failing silently - a permission or index error
+    // otherwise just left the modal empty with no clue why.
+    body.innerHTML = `<p class="text-red-500 text-xs col-span-full text-center py-8">Could not load photos: ${esc(e.message||String(e))}</p>`;
+  }
+};
+window.closeProctorPhotos = () => document.getElementById('proctorPhotosModal').classList.add('hidden');
+</script>
+</body>
+</html>
